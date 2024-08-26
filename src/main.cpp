@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "Arduino_LED_Matrix.h"
+#include "Debounce.h"
 
 #define TFT_DC  2
 #define TFT_CS  3
