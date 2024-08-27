@@ -22,12 +22,13 @@ byte frame[8][12] = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 WiFiServer server(80);
-
-char ssid[] = "00";        // your network SSID (name)
-char pass[] = "00";        // your network password (use for WPA, or use as key for WEP)
+int floorMap[50][50];
+char ssid[] = "WunnDebb";        // your network SSID (name)
+char pass[] = "pGhJC62m";        // your network password (use for WPA, or use as key for WEP)
 
 int led =  LED_BUILTIN;
 int status = WL_IDLE_STATUS;
+int number = 0;
 
 void printWiFiStatus() {
   // print the SSID of the network you're attached to:
@@ -45,7 +46,6 @@ void printWiFiStatus() {
 }
 
 void setup() {
-  Serial.begin(9600);
   matrix.begin();
   matrix.renderBitmap(frame, 8, 12);
   //Initialize serial and wait for port to open:
@@ -53,6 +53,7 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  delay(5000);
   Serial.println("Access Point Web Server");
 
   pinMode(led, OUTPUT);      // set the LED pin mode
@@ -71,7 +72,7 @@ void setup() {
 
   // by default the local IP address will be 192.168.4.1
   // you can override it with the following:
-  WiFi.config(IPAddress(192,48,56,2));
+  WiFi.config(IPAddress(192,168,51,236));
 
   // print the network name (SSID);
   Serial.print("Creating access point named: ");
@@ -86,8 +87,17 @@ void setup() {
   }
 
   // wait 10 seconds for connection:
-  delay(10000);
+  delay(6000);
 
+  for (int x=0; x<50; x++) {
+    for (int y=0; y<50; y++) {
+      if (y == 7) {
+        floorMap[x][y] = 1;
+      } else if (x == 35) {
+        floorMap[x][y] = 2;
+      }    
+    }
+  }
   // start the web server on port 80
   server.begin();
 
@@ -132,9 +142,24 @@ void loop() {
             client.println();
 
             // the content of the HTTP response follows the header:
-            client.print("<p style=\"font-size:7vw;\">Click <a href=\"/H\">here</a> turn the LED on<br></p>");
-            client.print("<p style=\"font-size:7vw;\">Click <a href=\"/L\">here</a> turn the LED off<br></p>");
-
+            client.print(F("<canvas id='myCanvas' width='1500' height='1500'></canvas>"));
+            
+            client.print(F("<script>var canvas=document.getElementById('myCanvas');var ctx=canvas.getContext('2d');var eSquare=20;var fSquare=20;var gridSize=50;var coordStrY='"));
+            for (int x=0; x<50; x++) {
+              for (int y=0; y<50; y++) {
+                client.print(floorMap[x][y]);
+              }
+            }
+            client.print(F("';var coordInd=0;"));
+            client.print(F("ctx.strokeStyle='rgb(0,0,0)';for(let x=1; x<=gridSize;x+=1){for(let y=1;y<=gridSize;y+=1){ctx.strokeRect(x*eSquare,y*eSquare,eSquare,eSquare);"));
+            client.print(F("if(coordInd<gridSize^2){if(coordStrY.charAt(coordInd)=='1')"));            
+            client.print(F("{ctx.fillStyle='rgb(255,0,0)';ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);}"));
+            client.print(F("else if(coordStrY.charAt(coordInd)=='2'){ctx.fillStyle='rgb(0,255,0)';"));
+            client.print(F("ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);"));
+            client.print(F("}}coordInd+=1;}}"));
+            client.print(F("</script>"));
+            client.print(F("<meta http-equiv=\"refresh\" content=\"10\">"));
+            
             // The HTTP response ends with another blank line:
             client.println();
             // break out of the while loop:
