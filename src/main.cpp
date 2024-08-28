@@ -44,3 +44,25 @@ void setup() {
 void loop() {  
   if (server.requestAvailable() != "") { server.respond(floorMap); }
 }
+
+
+/*
+compass on frame.
+stepper can be deduced from step pos relative to frame.
+stepper is homed using US to ping a blocking flag on the frame.
+encoder to compress transmitted data to browser --> 0 0 1 1 1 1 2 2 2 2 3 2 2 --> 0=10,1=11,2=12 followed by conseq qty --> 10 2 11 4 12 4 3 12 2 ---> 9 txByte vs 13 txByte 
+multiple us?
+
+1-  rotate stepper / ping until close range marker ref.
+    now body and stepper can be synced so the stepper always adjusts to be pointing in a compass direction (as a test)
+
+2-  if teach mode then the goal is to find the rough outline of the entire space. 
+    The rough outline will allow preplanning actual destinations so it doesn't wander around aimlessly.
+      stop -> 360 scan -> mark unknowns (0) with empties (1) or full (2)
+      path to next scan location -> stop --> scan --> populate new unknowns and reconcile descrepancies with previous scans. 
+    
+3-  if run mode the goal should be running certain lawnmower style function in small chunks of the "map" until entire map is complete
+
+
+
+*/
