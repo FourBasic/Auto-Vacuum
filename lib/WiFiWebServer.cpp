@@ -67,7 +67,7 @@ void WiFiWebServer::setup(const char *ssid, const char *pass, uint8_t ipo1, uint
     //printWiFiStatus();
 }
 
-int WiFiWebServer::requestAvailable() {
+String WiFiWebServer::requestAvailable() {
     // compare the previous status to the current status
     if (status != WiFi.status()) {
         // it has changed update the variable
@@ -81,10 +81,10 @@ int WiFiWebServer::requestAvailable() {
         }
     }
 
-    WiFiClient client = server.available();   // listen for incoming clients
+    client = server.available();   // listen for incoming clients
     if (client) {                             // if you get a client,
         Serial.println("new client");           // print a message out the serial port
-        currentLine = "";                       // make a String to hold incoming data from the client
+        String currentLine = "";                       // make a String to hold incoming data from the client
         while (client.connected()) {            // loop while the client's connected
             delayMicroseconds(10);                // This is required for the Arduino Nano RP2040 Connect - otherwise it will loop so fast that SPI will never be served.
             if (client.available()) {             // if there's bytes to read from the client,
@@ -94,36 +94,10 @@ int WiFiWebServer::requestAvailable() {
                     // if the current line is blank, you got two newline characters in a row.
                     // that's the end of the client HTTP request, so send a response:
                     if (currentLine.length() == 0) {
-                        // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-                        // and a content-type so the client knows what's coming, then a blank line:
-                        client.println("HTTP/1.1 200 OK");
-                        client.println("Content-type:text/html");
-                        client.println();
-
-                        // the content of the HTTP response follows the header:
-                        client.print(F("<canvas id='myCanvas' width='1500' height='1500'></canvas>"));
-                        
-                        client.print(F("<script>var canvas=document.getElementById('myCanvas');var ctx=canvas.getContext('2d');var eSquare=20;var fSquare=20;var gridSize=50;var coordStrY='"));
-                        for (int x=0; x<50; x++) {
-                            for (int y=0; y<50; y++) {
-                            client.print(floorMap[x][y]);
-                            }
-                        }
-                        client.print(F("';var coordInd=0;"));
-                        client.print(F("ctx.strokeStyle='rgb(0,0,0)';for(let x=1; x<=gridSize;x+=1){for(let y=1;y<=gridSize;y+=1){ctx.strokeRect(x*eSquare,y*eSquare,eSquare,eSquare);"));
-                        client.print(F("if(coordInd<gridSize^2){if(coordStrY.charAt(coordInd)=='1')"));            
-                        client.print(F("{ctx.fillStyle='rgb(255,0,0)';ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);}"));
-                        client.print(F("else if(coordStrY.charAt(coordInd)=='2'){ctx.fillStyle='rgb(0,255,0)';"));
-                        client.print(F("ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);"));
-                        client.print(F("}}coordInd+=1;}}"));
-                        client.print(F("</script>"));
-                        client.print(F("<meta http-equiv=\"refresh\" content=\"10\">"));
-                        
-                        // The HTTP response ends with another blank line:
-                        client.println();
-                        // break out of the while loop:
+                        return request;
                         break;
                     } else {      // if you got a newline, then clear currentLine:
+                    request = currentLine;
                     currentLine = "";
                     }
                 } else if (c != '\r') {    // if you got anything else but a carriage return character,
@@ -131,9 +105,38 @@ int WiFiWebServer::requestAvailable() {
                 }        
             }
         }
-        // close the connection:
-        client.stop();
-        Serial.println("client disconnected");
     }   
-    return 0;
+    return "";
+}
+
+void WiFiWebServer::respond(uint8_t data[2500]) {
+    // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+    // and a content-type so the client knows what's coming, then a blank line:
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-type:text/html");
+    client.println();
+
+    // the content of the HTTP response follows the header:
+    client.print(F("<canvas id='myCanvas' width='1500' height='1500'></canvas>"));
+    
+    client.print(F("<script>var canvas=document.getElementById('myCanvas');var ctx=canvas.getContext('2d');var eSquare=20;var fSquare=20;var gridSize=50;var coordStrY='"));
+    for (int i=0; i<2500; i++) {
+        client.print(data[i]);
+    }
+    client.print(F("';var coordInd=0;"));
+    client.print(F("ctx.strokeStyle='rgb(0,0,0)';for(let x=1; x<=gridSize;x+=1){for(let y=1;y<=gridSize;y+=1){ctx.strokeRect(x*eSquare,y*eSquare,eSquare,eSquare);"));
+    client.print(F("if(coordInd<gridSize^2){if(coordStrY.charAt(coordInd)=='1')"));            
+    client.print(F("{ctx.fillStyle='rgb(255,0,0)';ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);}"));
+    client.print(F("else if(coordStrY.charAt(coordInd)=='2'){ctx.fillStyle='rgb(0,255,0)';"));
+    client.print(F("ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);"));
+    client.print(F("}}coordInd+=1;}}"));
+    client.print(F("</script>"));
+    client.print(F("<meta http-equiv=\"refresh\" content=\"10\">"));
+    
+    // The HTTP response ends with another blank line:
+    client.println();
+    // break out of the while loop:
+            // close the connection:
+    client.stop();
+    Serial.println("client disconnected");
 }
