@@ -40,5 +40,5 @@ void setup() {
 }
 
 void loop() {  
-  if (server.requestAvailable() != "") { server.respond(floorMap); Serial.println("gurpy bad"); };
+  if (server.requestAvailable() != "") { server.respond(floorMap); }
 }
