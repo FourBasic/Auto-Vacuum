@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include "Arduino_LED_Matrix.h"
-#include "Debounce.h"
 #include "WiFiS3.h"
 #include "WiFiWebServer.h"
+#include "UltrasonicRange.h"
+#include "Debounce.h"
 
 ArduinoLEDMatrix matrix;
 byte frame[8][12] = {
@@ -22,12 +23,14 @@ byte frame[8][12] = {
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
-uint8_t floorMap[2500];
-WiFiWebServer server(80);
-char ssid[] = "WunnDebb";        // your network SSID (name)
-char pass[] = "pGhJC62m";        // your network password (use for WPA, or use as key for WEP)
 
-int status = WL_IDLE_STATUS;
+WiFiWebServer server(80);
+char ssid[] = "WunnDebb";
+char pass[] = "pGhJC62m";
+
+UltrasonicRange us(1,2,400);
+
+uint8_t floorMap[2500];
 
 void setup() {
   matrix.begin();
