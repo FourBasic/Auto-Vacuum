@@ -3,7 +3,6 @@
 #include "WiFiS3.h"
 #include "WiFiWebServer.h"
 #include "UltrasonicRange.h"
-#include "Debounce.h"
 
 ArduinoLEDMatrix matrix;
 byte frame[8][12] = {
