@@ -56,7 +56,6 @@ void WiFiWebServer::setup(const char *ssid, const char *pass, uint8_t ipo1, uint
     // don't continue
     while (true);
     }
-
     // wait 10 seconds for connection:
     delay(10000);
 
@@ -64,7 +63,7 @@ void WiFiWebServer::setup(const char *ssid, const char *pass, uint8_t ipo1, uint
     server.begin();
 
   // you're connected now, so print out the status
-    //printWiFiStatus();
+    printWiFiStatus();
 }
 
 String WiFiWebServer::requestAvailable() {
@@ -82,7 +81,7 @@ String WiFiWebServer::requestAvailable() {
     }
 
     client = server.available();   // listen for incoming clients
-    if (client) {                             // if you get a client,
+    if (client) {                            // if you get a client,
         Serial.println("new client");           // print a message out the serial port
         String currentLine = "";                       // make a String to hold incoming data from the client
         while (client.connected()) {            // loop while the client's connected
@@ -105,7 +104,7 @@ String WiFiWebServer::requestAvailable() {
                 }        
             }
         }
-    }   
+    }
     return "";
 }
 
@@ -117,6 +116,7 @@ void WiFiWebServer::respond(uint8_t data[2500]) {
     client.println();
 
     // the content of the HTTP response follows the header:
+    client.print(F("<!DOCTYPE html>"));
     client.print(F("<canvas id='myCanvas' width='1500' height='1500'></canvas>"));
     
     client.print(F("<script>var canvas=document.getElementById('myCanvas');var ctx=canvas.getContext('2d');var eSquare=20;var fSquare=20;var gridSize=50;var coordStrY='"));

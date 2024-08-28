@@ -32,16 +32,13 @@ int status = WL_IDLE_STATUS;
 void setup() {
   matrix.begin();
   matrix.renderBitmap(frame, 8, 12);
-  //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  for (int i=0; i<2500; i++) {
-        floorMap[i] = 1;
+  for (int i=0; i<2499; i++) {
+        floorMap[i] = 2;
   }
   server.setup(ssid, pass, 192, 168, 51, 236);
 }
 
-void loop() {
-  if (server.requestAvailable() != "") { server.respond(floorMap); };
-
+void loop() {  
+  if (server.requestAvailable() != "") { server.respond(floorMap); Serial.println("gurpy bad"); };
 }
-
