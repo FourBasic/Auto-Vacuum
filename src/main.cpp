@@ -2,6 +2,7 @@
 #include "Arduino_LED_Matrix.h"
 #include "Debounce.h"
 #include "WiFiS3.h"
+#include "WiFiWebServer.h"
 
 ArduinoLEDMatrix matrix;
 byte frame[8][12] = {
@@ -21,8 +22,8 @@ byte frame[8][12] = {
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
-WiFiServer server(80);
 uint8_t floorMap[2500];
+WiFiWebServer server(80);
 char ssid[] = "WunnDebb";        // your network SSID (name)
 char pass[] = "pGhJC62m";        // your network password (use for WPA, or use as key for WEP)
 
@@ -35,10 +36,12 @@ void setup() {
   Serial.begin(9600);
   for (int i=0; i<2500; i++) {
         floorMap[i] = 1;
-    }
+  }
+  server.setup(ssid, pass, 192, 168, 51, 236);
 }
 
 void loop() {
+  if (server.requestAvailable() != "") { server.respond(floorMap); };
 
 }
 
