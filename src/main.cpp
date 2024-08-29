@@ -3,6 +3,8 @@
 #include "WiFiS3.h"
 #include "WiFiWebServer.h"
 #include "UltrasonicRange.h"
+#include "Compass.h"
+#include "Map2D.h"
 
 ArduinoLEDMatrix matrix;
 byte frame[8][12] = {
@@ -28,21 +30,25 @@ char ssid[] = "WunnDebb";
 char pass[] = "pGhJC62m";
 
 UltrasonicRange us(1,2,400);
+Compass compass;
 
-uint8_t floorMap[2500];
+Map2D floorMap;
 
 void setup() {
   matrix.begin();
   matrix.renderBitmap(frame, 8, 12);
   Serial.begin(9600);
   for (int i=0; i<2499; i++) {
-        floorMap[i] = 2;
+        floorMap.data[i] = 2;
   }
   server.setup(ssid, pass, 192, 168, 51, 236);
+  compass.setup();
+  floorMap.setup();
 }
 
 void loop() {  
-  if (server.requestAvailable() != "") { server.respond(floorMap); }
+  if (server.requestAvailable() != "") { server.respond(floorMap.data); }
+
 }
 
 
@@ -59,7 +65,9 @@ multiple us?
 2-  if teach mode then the goal is to find the rough outline of the entire space. 
     The rough outline will allow preplanning actual destinations so it doesn't wander around aimlessly.
       stop -> 360 scan -> mark unknowns (0) with empties (1) or full (2)
-      path to next scan location -> stop --> scan --> populate new unknowns and reconcile descrepancies with previous scans. 
+      path to next scan location -> stop --> scan --> populate new unknowns and reconcile descrepancies with previous scans.
+      path finding can just be drawing a straight line in any direction, if it hits the "border" instead of a boundary line
+      then go there.
     
 3-  if run mode the goal should be running certain lawnmower style function in small chunks of the "map" until entire map is complete
 

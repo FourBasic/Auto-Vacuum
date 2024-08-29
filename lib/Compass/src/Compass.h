@@ -1,12 +1,15 @@
 #ifndef COMPASS_H
 #define COMPASS_H
 #include <Arduino.h>
+#include "HMC5883Llib.h"
 
 class Compass {
   public:		
-		Compass(uint8_t PIN);
+	  Compass();
+    void setup();
+    int getHeading();
   private:
-		int status;
-    int8_t PIN_;
+    Magnetometer mag;
+    bool fail;
 };
 #endif
