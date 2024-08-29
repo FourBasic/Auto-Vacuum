@@ -12,18 +12,23 @@ struct Vector {
 
 class Map2D {
   public:		
-	  Map2D();
-    void setup();
-    int update(Vector ref);
-    void setMyPos(CoordinatesXY c);
-    CoordinatesXY splitVector(Vector ref);
-    uint8_t findQuadIndex(int ref180);
-    uint8_t calcDisplacementProposal(CoordinatesXY component, uint8_t index);    
-    uint8_t data[2500]; //50*50 Grid
-  private:    
-    CoordinatesXY myPos;
-    CoordinatesXY lastQuadComponent[8];       //Store Last Components at Quadrant Angle Index
-    CoordinatesXY displacementProposals[8];
-    int displacementProposalsIndex;
+	   Map2D();
+      void setup();
+      void update(int heading);
+      int updatePosition(Vector vf, Vector vr);
+      void setMyPos(CoordinatesXY c);
+      uint8_t* getDataBlock();
+      void setDataPoint(int index, uint8_t val);
+      CoordinatesXY splitVector(Vector ref);
+      uint8_t findQuadIndex(int ref180);
+      uint8_t calcDisplacementProposal(CoordinatesXY component, uint8_t index);    
+      
+   private:
+      uint8_t data[2500]; //50*50 Grid 
+      CoordinatesXY myPos;
+      int heading180;
+      CoordinatesXY lastQuadComponent[8];       //Store Last Components at Quadrant Angle Index
+      CoordinatesXY displacementProposals[8];
+      int displacementProposalsIndex;
 };
 #endif
