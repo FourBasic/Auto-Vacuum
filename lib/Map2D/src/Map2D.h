@@ -7,7 +7,7 @@ struct CoordinatesXY {
 };
 
 struct Vector {
-   int dist,angle;
+   int dist,dir;
 };
 
 class Map2D {

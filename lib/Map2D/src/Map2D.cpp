@@ -16,7 +16,7 @@ int Map2D::update(Vector v) {
     // previous components@angle are stored to determine displacement by differentiating
     // find the index contataining components matching direction of argument V.
     uint8_t quadIndex;
-    quadIndex = findQuadIndex(v.angle);
+    quadIndex = findQuadIndex(v.dir);
 
     // Differentiate/determine displacement and reject impossible results
     // Add valid results to proposal buffer to later be used in estimating actual displacement
@@ -49,8 +49,8 @@ uint8_t Map2D::findQuadIndex(int ref180) {
 
 CoordinatesXY Map2D::splitVector(Vector v) {
     CoordinatesXY c;
-    c.x = sin(v.angle) * v.dist;
-    c.y = cos(v.angle) * v.dist;
+    c.x = sin(v.dir) * v.dist;
+    c.y = cos(v.dir) * v.dist;
     return c; 
 }
 

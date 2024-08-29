@@ -48,6 +48,10 @@ void setup() {
 
 void loop() {  
   if (server.requestAvailable() != "") { server.respond(floorMap.data); }
+  Vector v;
+  v.dist = us.getRangeCM();
+  v.dir = compass.getHeading();
+  floorMap.update(v);
 
 }
 
