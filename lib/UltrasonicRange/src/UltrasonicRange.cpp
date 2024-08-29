@@ -4,7 +4,7 @@
 // Speed of Sound 340 m/s = 0.034 cm/us
 // distance = travelDistance / 2 = 0.034 * pulseDuration / 2 = 0.017
 
-UltrasonicRange::UltrasonicRange(uint8_t trig, uint8_t echo, uint16_t rangeCM) {
+UltrasonicRange::UltrasonicRange(uint8_t trig, uint8_t echo, int rangeCM) {
     PIN_TRIG = trig;
     PIN_ECHO = echo;
     pinMode(trig, OUTPUT);
