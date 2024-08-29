@@ -29,29 +29,32 @@ WiFiWebServer server(80);
 char ssid[] = "WunnDebb";
 char pass[] = "pGhJC62m";
 
-UltrasonicRange us(1,2,400);
+UltrasonicRange usf(1,2,400);
+UltrasonicRange usr(3,4,400);
 Compass compass;
 
 Map2D floorMap;
 
 void setup() {
   matrix.begin();
-  matrix.renderBitmap(frame, 8, 12);
+  matrix.renderBitmap(frame,8,12);
   Serial.begin(9600);
-  for (int i=0; i<2499; i++) {
-        floorMap.data[i] = 2;
-  }
-  server.setup(ssid, pass, 192, 168, 51, 236);
+  for (int i=0; i<2499; i++) { floorMap.setDataPoint(i,2); }
+  server.setup(ssid,pass,192,168,51,236);
   compass.setup();
   floorMap.setup();
 }
 
 void loop() {  
-  if (server.requestAvailable() != "") { server.respond(floorMap.data); }
-  Vector v;
-  v.dist = us.getRangeCM();
-  v.dir = compass.getHeading();
-  floorMap.update(v);
+  if (server.requestAvailable() != "") { server.respond(floorMap.getDataBlock()); }
+  Vector vf, vr;
+  vf.dist = usf.getRangeCM();
+  vr.dist = usr.getRangeCM();
+  compass.update();
+  vf.dir = compass.getHeading180();
+  vr.dir = vf.dir;
+
+  floorMap.updatePosition(vf, vr);
 
 }
 
