@@ -11,19 +11,22 @@ struct Vector {
 };
 
 class Map2D {
-  public:		
-	  Map2D();
-    void setup();
-    void addDriveVector(Vector ref);
-    void setMyPos(CoordinatesXY c);
-    CoordinatesXY splitVector(Vector ref);
-    uint8_t findQuadIndex(int ref180);
-    uint8_t calcDisplacementProposal(CoordinatesXY component, uint8_t index);    
-    uint8_t data[2500]; //50*50 Grid
-  private:    
-    CoordinatesXY myPos;
-    CoordinatesXY lastQuadComponent[8];       //Store Last Components at Quadrant Angle Index
-    CoordinatesXY displacementProposals[8];
-    int displacementProposalsIndex;
+   public:		
+      Map2D();
+      void setup();
+      void setPosGrid(CoordinatesXY c);
+      void step();
+      Vector nextCmd(int mode, int context);      
+      CoordinatesXY splitVector(Vector v);
+      uint8_t data[2500]; //50*50 Grid
+   private:
+      const int stepSize = 10;
+      const int gridSize = 50;
+      CoordinatesXY pos;
+      CoordinatesXY posGrid;
+      Vector movement;
+      Vector cmd;
+      int lastContext;
+      int lastMode;
 };
 #endif

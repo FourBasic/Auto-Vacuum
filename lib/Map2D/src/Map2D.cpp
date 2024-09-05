@@ -2,41 +2,47 @@
 #include <Arduino.h>
 #include "GeneralFunctions.h"
 
-/*
-    
-*/
+#define MODE_BUILD 1
+#define MODE_CLEAN 2
+
+#define INIT 1
+#define COLLISION 2
+#define CMD_COMPLETE 3
+#define WALLRIDE 4
+#define OPENAREA 5
 
 Map2D::Map2D() { }
 
 void Map2D::setup() {
-    myPos.x = 0; myPos.y = 0;
+    CoordinatesXY c;
+    c.x = 0;
+    c.y = 0;
+    setPosGrid(c);
+    // Check EEPROM if map exists and load into memory, otherwise build
+    // Just build for initial testing
+    nextCmd(MODE_BUILD, INIT);
 }
 
-void Map2D::addDriveVector(Vector v) {
-    // break reference into its components
-    CoordinatesXY component;
-    component = splitVector(v);
-}
-
-void Map2D::setMyPos(CoordinatesXY c) {
-    myPos = c;
-    // Flush all proposals?? Dont think it is needed. Just shifting frame of reference, disp still valid.
-    //displacementProposalsIndex = 0;
-}
-
-// Find the quadrant index with matching angle 99=error 
-uint8_t Map2D::findQuadIndex(int ref180) {
-    // convert +-180 angle to 360
-    int ref360;
-    if (ref180 >= 0) { ref360 = ref180; } else { ref360 = 360 + ref180; }
-
-    // Find the quadrant index with closest matching angle
-    uint8_t quadIndex;
-    for (int quad=0; quad<360; quad+=45) {
-        if (withinRange(quad, ref360, 1)) { return quadIndex; break; }
-        quadIndex++;
+// Counts steps in a given direction
+void Map2D::step() {
+    movement.dist = movement.dist + stepSize;
+    if (movement.dist >= cmd.dist) {
+        nextCmd(lastMode, CMD_COMPLETE);
     }
-    return 99;
+}
+
+Vector Map2D::nextCmd(int mode, int context) {
+    lastMode = mode;
+    lastContext = context;
+    Vector v;
+    return v;
+}
+
+void Map2D::setPosGrid(CoordinatesXY c) {
+    posGrid.x = c.x;
+    posGrid.y = c.y;
+    pos.x = posGrid.x * stepSize;
+    pos.y = posGrid.y * stepSize;
 }
 
 CoordinatesXY Map2D::splitVector(Vector v) {
@@ -46,26 +52,7 @@ CoordinatesXY Map2D::splitVector(Vector v) {
     return c; 
 }
 
-// Differentiate between new and old component-add to proposal buffer
-uint8_t Map2D::calcDisplacementProposal(CoordinatesXY component, uint8_t index) {
-    CoordinatesXY disp;
-    disp.x = lastQuadComponent[index].x - component.x;
-    disp.y = lastQuadComponent[index].y - component.y;
-    
-    // Probably want some error checking and maybe add time to the structure
-    // to get velocity to check validity of data against a maxVelocity
-    bool reject;
-    reject = reject; //...eventually
-    if (!reject) {
-        // Replace old components with new
-        lastQuadComponent[index].x = component.x;
-        lastQuadComponent[index].y = component.y;
-        // Add to proposal buffer
-        displacementProposals[displacementProposalsIndex] = disp;
-        displacementProposalsIndex ++;
-        return 1;
-    } else { return 0; }
-}
+
 
 
 
