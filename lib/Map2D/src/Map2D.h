@@ -14,7 +14,7 @@ class Map2D {
   public:		
 	  Map2D();
     void setup();
-    int update(Vector ref);
+    void addDriveVector(Vector ref);
     void setMyPos(CoordinatesXY c);
     CoordinatesXY splitVector(Vector ref);
     uint8_t findQuadIndex(int ref180);

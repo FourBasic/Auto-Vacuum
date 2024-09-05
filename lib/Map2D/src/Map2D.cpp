@@ -2,28 +2,20 @@
 #include <Arduino.h>
 #include "GeneralFunctions.h"
 
+/*
+    
+*/
+
 Map2D::Map2D() { }
 
 void Map2D::setup() {
     myPos.x = 0; myPos.y = 0;
 }
 
-int Map2D::update(Vector v) {
+void Map2D::addDriveVector(Vector v) {
     // break reference into its components
     CoordinatesXY component;
     component = splitVector(v);
-
-    // previous components@angle are stored to determine displacement by differentiating
-    // find the index contataining components matching direction of argument V.
-    uint8_t quadIndex;
-    quadIndex = findQuadIndex(v.dir);
-
-    // Differentiate/determine displacement and reject impossible results
-    // Add valid results to proposal buffer to later be used in estimating actual displacement
-    uint8_t proposalAdded;
-    if (quadIndex > -1 && quadIndex < 9) {
-        proposalAdded = calcDisplacementProposal(component, quadIndex);
-    }
 }
 
 void Map2D::setMyPos(CoordinatesXY c) {
