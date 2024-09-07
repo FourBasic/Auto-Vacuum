@@ -1,6 +1,6 @@
 WORK IN PROGRESS
 
-Source code for PlatformIO Auto-Vacuum 3D printed - https://makerworld.com/en/models/
+PlatformIO Source Code for the 3D-printed Auto-Vacuum - https://makerworld.com/en/models/
 
 Arduino Uno R4 Wifi
 
