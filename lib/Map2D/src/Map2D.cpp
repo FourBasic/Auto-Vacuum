@@ -1,6 +1,6 @@
 #include "Map2D.h"
 #include <Arduino.h>
-#include "GeneralFunctions.h"
+//#include "GeneralFunctions.h"
 
 #define MODE_BUILD 1
 #define MODE_CLEAN 2
@@ -34,7 +34,7 @@ void Map2D::setup() {
 // Externally called - counts drive steps to flag drive action completion
 void Map2D::step() {
     movement.dist = movement.dist + stepSize;
-    if (movement.dist >= driveCmd.dest.dist) {
+    if (movement.dist >= driveCmd.v.dist) {
         driveAction = COMPLETE;
     }
 }
@@ -73,6 +73,11 @@ void Map2D::nextDriveCmd() {
     if (mode == MODE_BUILD) {
         if (driveAction == INIT) {
             driveAction = WAIT;
+            driveCmd.speed = 0;
+        } else if (driveAction == COMPLETE) {
+            driveCmd.speed = 255;
+            driveCmd.v.dir = 50;
+            driveCmd.v.dist = 50;
         }
     }
 }
@@ -88,15 +93,15 @@ void Map2D::nextUSCmd() {
 
 // Something to call internal timers and other periodic checks
 void Map2D::update() {
-    // timers
+    // timers?
 
-    // call next command when wait condition is satisfied
-    if (driveAction == WAIT && usAction == COMPLETE) {
-        nextDriveCmd();
-    }
-    if (usAction == WAIT && driveAction == COMPLETE) {
-        nextUSCmd();
-    }
+    // Set complete when wait condition is satisfied
+    if (driveAction == WAIT && usAction == COMPLETE) { driveAction = COMPLETE; }
+    if (usAction == WAIT && driveAction == COMPLETE) { usAction = COMPLETE; }
+
+    // Generate next command on complete
+    if (driveAction == COMPLETE) { nextDriveCmd(); }
+    if (usAction == COMPLETE) { nextUSCmd(); }
 
 }
 
@@ -117,8 +122,5 @@ CoordinatesXY Map2D::splitVector(Vector v) {
     c.y = cos(v.dir) * v.dist;
     return c; 
 }
-
-
-
 
 

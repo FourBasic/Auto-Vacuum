@@ -11,7 +11,7 @@ struct Vector {
 };
 
 struct DriveCommand {
-   Vector dest;
+   Vector v;
    int speed;
 };
 
