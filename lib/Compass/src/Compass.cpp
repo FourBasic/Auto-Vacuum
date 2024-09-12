@@ -27,46 +27,7 @@ void Compass::setup() {
     mag.setGain(HMC5833L_GAIN_1370);
 }
 
-bool Compass::update() {
-    // don't bother reading if we failed to connect
-    if (fail)
-        return 0;
-    double heading;
-    //int16_t x;
-    //int16_t y;
-    //int16_t z;
-    // reads the heading in degrees using the X and Y axis
-    int8_t ret = mag.readHeadingDeg(&heading);    
-    //int8_t ret = mag.readRaw(&x,&y,&z);    
-
-    switch (ret) {
-        case HMC5833L_ERROR_GAINOVERFLOW:
-            Serial.println("Gain Overflow");
-            return 0;
-        case 0:
-            // success
-            break;
-        default:
-            Serial.println("Failed to read Magnetometer");
-            return 0;
-    }
-
-    // print them out
-    Serial.print("Heading: ");
-    Serial.print(heading);
-    Serial.println(" degrees");
-
-    heading360 = heading;
-    heading180 = convertToHeading180(heading360);
-
-    return 1;
-}
-
-int Compass::convertToHeading180(int heading360) {
-    if (heading360 > 180) { heading180 = heading360; } else { heading180 = heading360 - 360; }
-}
-
-int Compass::getHeading360() {
+int Compass::getHeading() {
     // don't bother reading if we failed to connect
     if (fail)
         return -1;
@@ -96,8 +57,4 @@ int Compass::getHeading360() {
     Serial.println(" degrees");
 
     return heading;
-}
-
-int Compass::getHeading180() { 
-    
 }

@@ -7,14 +7,9 @@ class Compass {
   public:		
 	  Compass();
     void setup();
-    bool update();
-    int convertToHeading180(int heading360);
-    int getHeading360();
-    int getHeading180();
+    int getHeading();
   private:
     Magnetometer mag;
     bool fail;
-    int heading360;
-    int heading180;
 };
 #endif
