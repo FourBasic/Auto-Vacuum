@@ -5,8 +5,24 @@
 #include "UltrasonicRange.h"
 #include "Compass.h"
 #include "Map2D.h"
+#include "Debounce.h"
+#include "AwfulPID.h"
+
+#define PIN_ENCODER 1
+#define PIN_BUMPSENSOR 2
 
 ArduinoLEDMatrix matrix;
+WiFiWebServer server(80);
+char ssid[] = "@";
+char pass[] = "@";
+UltrasonicRange us(1,2,400);
+Compass compass;
+Debounce encoderPulse;
+Map2D floorMap;
+AwfulPID pid_drive;
+const PIDConfiguration pidCfg_drive {1, 2, 3, false};
+const PIDParameters pidParam_drive {1.0, 0.0, 0.0};
+// Scratch *********########
 byte frame[8][12] = {
   { 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0 },
 
@@ -24,42 +40,65 @@ byte frame[8][12] = {
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
-
-WiFiWebServer server(80);
-char ssid[] = "WunnDebb";
-char pass[] = "pGhJC62m";
-
-UltrasonicRange usf(1,2,400);
-UltrasonicRange usr(3,4,400);
-Compass compass;
-
-Map2D floorMap;
+int stepperPos;
 
 void setup() {
+  pinMode(PIN_ENCODER, INPUT);
+  pinMode(PIN_BUMPSENSOR, INPUT);
   matrix.begin();
-  matrix.renderBitmap(frame,8,12);
+  matrix.renderBitmap(frame, 8, 12);
   Serial.begin(9600);
-  for (int i=0; i<2499; i++) { floorMap.setDataPoint(i,2); }
-  server.setup(ssid,pass,192,168,51,236);
+  for (int i=0; i<2499; i++) {
+        floorMap.data[i] = 2; 
+  }
+  encoderPulse.setup(digitalRead(PIN_ENCODER));
+  server.setup(ssid, pass, 192, 168, 51, 236);
   compass.setup();
   floorMap.setup();
+  pid_drive.setConfig(pidCfg_drive);
+  pid_drive.setParam(pidParam_drive);
 }
 
-void loop() {  
-  if (server.requestAvailable() != "") { server.respond(floorMap.getDataBlock()); }
-  Vector vf, vr;
-  vf.dist = usf.getRangeCM();
-  vr.dist = usr.getRangeCM();
-  compass.update();
-  vf.dir = compass.getHeading180();
-  vr.dir = vf.dir;
+void loop() {
+  // Answer client requests
+  if (server.requestAvailable() != "") { server.respond(floorMap.data); }
 
-  floorMap.updatePosition(vf, vr);
+  // Get commands from floorMap
+  DriveCommand dc = floorMap.getDriveCommand();
+  USCommand uc = floorMap.getUSCommand();
+
+  // Get heading from compass
+  int heading = compass.getHeading();
+
+  // Control Motors
+  if (dc.speed) {
+    // Control loop for error between compass heading and command heading
+    int speedBias = pid_drive.update(0x01, heading, dc.v.dir);
+    // Use speedBias to increase one motor speed while decreasing the other, causing rotation
+    int mtrSpeed_R = dc.speed + speedBias;
+    int mtrSpeed_L = dc.speed - speedBias;
+  }
+
+  // Control Ultrasonic
+  Vector vPing;
+  vPing.dir = heading + stepperPos;
+  //vPing.dist = conditional on ping request 
+
+  // Send events to floorMap
+  if (encoderPulse.update(digitalRead(PIN_ENCODER), 50, 50)) { floorMap.step(); }
+  if (vPing.dist) { floorMap.ping(vPing); }
+  if (digitalRead(PIN_BUMPSENSOR)) { floorMap.collision(); }
+  floorMap.update();
 
 }
 
 
 /*
+Single very low resolution encoder attached to only one motor.
+Can do just one motor because the turns should result in little to no displacement
+Only displace on straight paths, only need to calculate on straight paths
+Low resolution so an interrupt is not required to catch the pulse
+
 compass on frame.
 stepper can be deduced from step pos relative to frame.
 stepper is homed using US to ping a blocking flag on the frame.
