@@ -11,6 +11,14 @@
 #define PIN_ENCODER 1
 #define PIN_BUMPSENSOR 2
 
+#define DEBUG_UNITTEST
+#define DEBUG_IODRIVER
+
+#ifdef DEBUG_IODRIVER
+#include "IODriver.h"
+IODriver IOD;
+#endif
+
 ArduinoLEDMatrix matrix;
 WiFiWebServer server(80);
 char ssid[] = "@";
@@ -43,6 +51,12 @@ byte frame[8][12] = {
 int stepperPos;
 
 void setup() {
+  #ifdef DEBUG_UNITTEST
+  IOD.setup();
+  IOD.setPinMode(1, 1);
+  IOD.setPinClock(1, 2000, 2000);
+  return;
+  #endif
   pinMode(PIN_ENCODER, INPUT);
   pinMode(PIN_BUMPSENSOR, INPUT);
   matrix.begin();
@@ -60,6 +74,12 @@ void setup() {
 }
 
 void loop() {
+  #ifdef DEBUG_UNITTEST
+  while(true) {
+    IOD.update();
+    Serial.println(IOD.getPinState(1));
+  }
+  #endif
   // Answer client requests
   if (server.requestAvailable() != "") { server.respond(floorMap.data); }
 
