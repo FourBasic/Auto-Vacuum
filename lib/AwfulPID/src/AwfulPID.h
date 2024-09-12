@@ -19,11 +19,11 @@ class AwfulPID {
     void setConfig(PIDConfiguration c);
     void setParam(PIDParameters p);
     void setManual(int mv);
-    int update(byte ctrl, int PV, int SP);
-    int calculateError();
+    int update(byte ctrl, int PV, int SP);    
     int getError();
     int getCV();
   private:
+    int calculateError();
     PIDConfiguration cfg;
     PIDParameters param;
     Debounce cycleTimer;
