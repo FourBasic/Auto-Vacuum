@@ -49,7 +49,7 @@ void setup() {
   matrix.renderBitmap(frame, 8, 12);
   Serial.begin(9600);
   for (int i=0; i<2499; i++) {
-        floorMap.data[i] = 2;
+        floorMap.data[i] = 2; 
   }
   encoderPulse.setup(digitalRead(PIN_ENCODER));
   server.setup(ssid, pass, 192, 168, 51, 236);
