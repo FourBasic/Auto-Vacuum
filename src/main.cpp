@@ -1,3 +1,4 @@
+/* #region PROG_CONFIG */
 #define DEBUG_TEST
 #define DEBUG_IO_SIMULATE
 #ifdef DEBUG_IO_SIMULATE
@@ -5,7 +6,9 @@
 IOSimulate ioSim;
 Debounce testClock;
 #endif
+/* #endregion */
 
+/* #region INCLUDE */
 #include <Arduino.h>
 #include "Arduino_LED_Matrix.h"
 #include "WiFiS3.h"
@@ -15,10 +18,14 @@ Debounce testClock;
 #include "Map2D.h"
 #include "Debounce.h"
 #include "AwfulPID.h"
+/* #endregion */
 
+/* #region DEFINE_IO_PINS */
 #define PIN_ENCODER 1
 #define PIN_BUMPSENSOR 2
+/* #endregion */
 
+/* #region GLOBAL_VAR */
 ArduinoLEDMatrix matrix;
 WiFiWebServer server(80);
 char ssid[] = "@";
@@ -32,7 +39,9 @@ const PIDConfiguration pidCfg_drive {1, 0, 100, false};
 const PIDParameters pidParam_drive {0.2, 0.5, 0.0};
 // Scratch *********########
 int stepperPos;
+/* #endregion */
 
+/* #region SETUP */
 void initIO() {
   pinMode(PIN_ENCODER, INPUT);
   pinMode(PIN_BUMPSENSOR, INPUT);
@@ -89,8 +98,10 @@ void setup() {
   initDevice();
   initAbstract();
 }
+/* #endregion */
 
 void loop() {
+  /* #region TEST */
   #ifdef DEBUG_TEST
     int newSPCount;
     testClock.setup(0);
@@ -103,7 +114,9 @@ void loop() {
       clock = (int) testClock.update(!testClock.getState(), 200, 200);
     }
   #endif
+  /* #endregion */
 
+  /* #region MAIN */
   // Answer client requests
   if (server.requestAvailable() != "") { server.respond(floorMap.data); }
 
@@ -135,7 +148,7 @@ void loop() {
   if (vPing.dist) { floorMap.ping(vPing); }
   if (digitalRead(PIN_BUMPSENSOR)) { floorMap.collision(); }
   floorMap.update();
-
+  /* #endregion */
 }
 
 

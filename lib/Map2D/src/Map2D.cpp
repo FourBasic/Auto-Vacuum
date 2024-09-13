@@ -1,7 +1,9 @@
+/* #region INCLUDE */
 #include "Map2D.h"
 #include <Arduino.h>
-//#include "GeneralFunctions.h"
+/* #endregion */
 
+/* #region DEFINE_ACTION_CONTEXT */
 #define MODE_BUILD 1
 #define MODE_CLEAN 2
 #define INIT 1
@@ -12,21 +14,26 @@
 #define US_SWEEP 6
 #define CRUISE 7
 #define WAIT 8
+/* #endregion */
 
+/* #region DEFINE_GRID_TYPES */
 #define GRID_UNKNOWN 0
 #define GRID_SOLID 1
 #define GRID_BORDER 2
 #define GRID_DIVIDER 3
 #define GRID_EMPTY 4
+/* #endregion */
 
+/* #region DEFINE_FUNCTION_MODIFIER */
 #define XFER_SINGLE 0
 #define XFER_PERIM_ONE 1
+/* #endregion */
 
 Map2D::Map2D() { }
 
-/* INTERFACE FUNCTIONS */
-/* ------------------------------------------------------------ */
-// Externally called - Controller boot
+/* #region EXTERNAL_CALL */
+
+// Initialize & retrieve map from EEPROM
 void Map2D::setup() {
     CoordinatesXY c;
     c.x = 0;
@@ -41,49 +48,6 @@ void Map2D::setup() {
     nextUSCmd();
 }
 
-// Externally called - counts drive steps to flag drive action completion
-void Map2D::step() {
-    movement.dist = movement.dist + stepSize;
-    if (movement.dist >= driveCmd.v.dist) {
-        driveAction = COMPLETE;
-    }
-}
-
-// Externally called - somehow pings to flag usAction completion
-void Map2D::ping(Vector v) {
-    // Populate ping buffer --> Buffer analyzed in other functions
-    if (pingBuff_size != pingBuff_maxSize) {
-        pingBuff[pingBuff_size] = v;
-        pingBuff_size ++;
-    }
-    // else compare with map expected values and issue corrections
-    if (v.dir == 360) {
-        usAction = COMPLETE;
-    }
-}
-
-// Externally called - unexpected event, need to recalculate
-void Map2D::collision() {
-    driveAction = COLLISION;
-    usAction = COLLISION;
-    nextDriveCmd();
-    nextUSCmd();
-}
-
-// Externally called - Tells drive what it should be doing
-DriveCommand Map2D::getDriveCommand() {
-    return driveCmd;
-}
-
-// Externally called - Tells US what it should be doing
-USCommand Map2D::getUSCommand() {
-    return usCmd;
-}
-
-
-/* CORE FUNCTIONS */
-/* ------------------------------------------------------------ */
-
 // Something to call internal timers and other periodic checks
 void Map2D::update() {
     // timers?
@@ -97,6 +61,49 @@ void Map2D::update() {
     if (usAction == COMPLETE) { nextUSCmd(); }
 
 }
+
+// Counts drive steps to flag drive action completion
+void Map2D::step() {
+    movement.dist = movement.dist + stepSize;
+    if (movement.dist >= driveCmd.v.dist) {
+        driveAction = COMPLETE;
+    }
+}
+
+// Somehow pings to flag usAction completion
+void Map2D::ping(Vector v) {
+    // Populate ping buffer --> Buffer analyzed in other functions
+    if (pingBuff_size != pingBuff_maxSize) {
+        pingBuff[pingBuff_size] = v;
+        pingBuff_size ++;
+    }
+    // else compare with map expected values and issue corrections
+    if (v.dir == 360) {
+        usAction = COMPLETE;
+    }
+}
+
+// Unexpected event, need to recalculate
+void Map2D::collision() {
+    driveAction = COLLISION;
+    usAction = COLLISION;
+    nextDriveCmd();
+    nextUSCmd();
+}
+
+// Get current drive objective
+DriveCommand Map2D::getDriveCommand() {
+    return driveCmd;
+}
+
+// Get current ultrasonic objective
+USCommand Map2D::getUSCommand() {
+    return usCmd;
+}
+
+/* #endregion */
+
+/* #region CORE */
 
 // Determine the next drive command
 void Map2D::nextDriveCmd() {
@@ -124,9 +131,9 @@ void Map2D::nextUSCmd() {
     }
 }
 
+/* #endregion */
 
-/* MAP BUILD FUNCTIONS */
-/* ------------------------------------------------------------ */
+/* #region MAP_BUILD */
 
 // Deduce grid area that is empty
 void Map2D::markEnclosedArea() {
@@ -168,9 +175,9 @@ void Map2D::gridMarkEmpty() {
 
 }
 
+/* #endregion */
 
-/* ASSISTING FUNCTIONS */
-/* ------------------------------------------------------------ */
+/* #region ASSISTING */
 
 // Set the current coordinates
 void Map2D::setPosGrid(CoordinatesXY c) {
@@ -229,8 +236,7 @@ uint8_t Map2D::getMapData(CoordinatesXY c, uint8_t fctn, uint8_t* ptrFirstElemen
         // Is this even legal or remotely correct?
         ptrFirstElement ++; // Index memory address (Presumably by 1 byte)
         *ptrFirstElement = actualData[2]; // Set that second byte address to a value?
-    }
-
-
-    
+    }    
 }
+
+/* #endregion */

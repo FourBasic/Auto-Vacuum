@@ -33,6 +33,7 @@ void IOSimulate::setPinState(int _pin, int _state) {
     pin[_pin].state = _state;
 }
 
+// Continuously pulse with adjustable on &
 void IOSimulate::setPinClock(int _pin, unsigned int _onT, unsigned int _offT) {
     pin[_pin].onT = _onT;
     pin[_pin].offT = _offT;
