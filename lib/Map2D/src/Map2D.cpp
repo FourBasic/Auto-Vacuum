@@ -191,12 +191,13 @@ void Map2D::setPosGrid(CoordinatesXY c) {
 CoordinatesXY Map2D::splitVector(Vector v) {
     // Generally working in Deg b/c it is more practical for integers
     // Arduino trig functions take Rad so...
-    v.dir = v.dir * degToRad;
+    float dirRad;
+    dirRad = v.dir * degToRad;
 
     // Find components
     CoordinatesXY c;
-    c.x = sin(v.dir) * v.dist;
-    c.y = cos(v.dir) * v.dist;
+    c.x = sin(dirRad) * v.dist;
+    c.y = cos(dirRad) * v.dist;
     return c; 
 }
 
