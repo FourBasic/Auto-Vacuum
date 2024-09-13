@@ -19,7 +19,7 @@ Attempting to design a battery powered vacuum that can:
 
 ** Mechanical **
 https://cad.onshape.com/
-Hardly Started.
+Imagineering Stage
 
 
 ** Electrical **
