@@ -1,5 +1,5 @@
-#ifndef UNITTEST_H
-#define UNITTEST_H
+#ifndef IOSIMULATE_H
+#define IOSIMULATE_H
 #include <Arduino.h>
 #include "Debounce.h"
 
@@ -10,9 +10,9 @@ struct PinData {
     unsigned int onT, offT;
 };
 
-class IODriver {
+class IOSimulate {
   public:		
-    IODriver();
+    IOSimulate();
     void setup();
     void update();
     void setPinMode(int _pin, uint8_t _mode);

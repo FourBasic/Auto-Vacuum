@@ -1,6 +1,7 @@
 #include "AwfulPID.h"
 #include <Arduino.h>
 #include "Debounce.h"
+#include "GeneralFunctions.h"
 
 #define INIT        0x00
 #define ENABLE      0x01
@@ -23,7 +24,7 @@ void AwfulPID::setManual(int val) {
     MV = val;
 }
 
-int AwfulPID::update(byte ctrl, int rPV, int rSP) {    
+int AwfulPID::update(byte ctrl, int _PV, int _SP) {    
     if (ctrl == INIT) {
         // Clear and init
         CV = cfg.outMn;
@@ -42,26 +43,26 @@ int AwfulPID::update(byte ctrl, int rPV, int rSP) {
             cycleTimer.resetTransitionFlag();
 
             // Push request to current
-            PV = rPV;
-            SP = rSP;
+            PV = _PV;
+            SP = _SP;
             
             // Calculations
             int err = calculateError();
             if (err != 0) {
-                int term_kp, term_kd;
-                term_kp = param.kp * err; 
-                if (param.ki) { acc_ki = acc_ki + (param.ki * err); }
-                if (param.kd) { term_kd = param.kd * abs(err - err_last); }
+                int term_kp;
+                int term_kd = 0;
+                term_kp = (int) (param.kp * err); 
+                if (param.ki > 0.00001) { acc_ki = acc_ki + (param.ki * err); }
+                if (param.kd > 0.00001) { term_kd = param.kd * (err - err_last); }
                 CV = term_kp + acc_ki + term_kd;
-            }
-        
-        }       
-    
+            }        
+        }    
     } else if (ctrl == TIEBACK) {
 
     } else if (ctrl == MANUAL) {
         CV = MV;
-    }
+    }    
+    CV = limit(cfg.outMn, CV, cfg.outMx);
     return CV;
 }
 

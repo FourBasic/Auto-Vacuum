@@ -2,10 +2,12 @@
 #define AWFULPID_H
 #include <Arduino.h>
 #include "Debounce.h"
+#include "GeneralFunctions.h"
 
 struct PIDConfiguration{
-  uint16_t period_ms; 
-  int outMx, outMn;
+  unsigned int period_ms; 
+  int outMn;
+  int outMx;
   bool reverseActing;
 };
 
@@ -19,7 +21,7 @@ class AwfulPID {
     void setConfig(PIDConfiguration c);
     void setParam(PIDParameters p);
     void setManual(int mv);
-    int update(byte ctrl, int PV, int SP);    
+    int update(byte ctrl, int _PV, int _SP);    
     int getError();
     int getCV();
   private:
@@ -29,7 +31,7 @@ class AwfulPID {
     Debounce cycleTimer;
     int PV, SP, CV, MV;
     int err_last;
-    float acc_ki;
+    float acc_ki = 0.0;
 
 
 };

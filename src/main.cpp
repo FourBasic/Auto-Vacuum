@@ -1,3 +1,11 @@
+#define DEBUG_TEST
+#define DEBUG_IO_SIMULATE
+#ifdef DEBUG_IO_SIMULATE
+#include "IOSimulate.h"
+IOSimulate ioSim;
+Debounce testClock;
+#endif
+
 #include <Arduino.h>
 #include "Arduino_LED_Matrix.h"
 #include "WiFiS3.h"
@@ -20,10 +28,18 @@ Compass compass;
 Debounce encoderPulse;
 Map2D floorMap;
 AwfulPID pid_drive;
-const PIDConfiguration pidCfg_drive {1, 2, 3, false};
-const PIDParameters pidParam_drive {1.0, 0.0, 0.0};
+const PIDConfiguration pidCfg_drive {1, 0, 100, false};
+const PIDParameters pidParam_drive {0.2, 0.5, 0.0};
 // Scratch *********########
-byte frame[8][12] = {
+int stepperPos;
+
+void initIO() {
+  pinMode(PIN_ENCODER, INPUT);
+  pinMode(PIN_BUMPSENSOR, INPUT);
+}
+
+void initMatrix() {
+  byte frame[8][12] = {
   { 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0 },
 
   { 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0 },
@@ -39,27 +55,55 @@ byte frame[8][12] = {
   { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-};
-int stepperPos;
-
-void setup() {
-  pinMode(PIN_ENCODER, INPUT);
-  pinMode(PIN_BUMPSENSOR, INPUT);
+  };
   matrix.begin();
-  matrix.renderBitmap(frame, 8, 12);
-  Serial.begin(9600);
-  for (int i=0; i<2499; i++) {
-        floorMap.data[i] = 2; 
-  }
+  matrix.renderBitmap(frame, 8, 12);  
+}
+
+void initDevice() {
+  compass.setup(); 
   encoderPulse.setup(digitalRead(PIN_ENCODER));
-  server.setup(ssid, pass, 192, 168, 51, 236);
-  compass.setup();
+  server.setup(ssid, pass, 192, 168, 51, 236);  
+}
+
+void initAbstract() {
   floorMap.setup();
+  for (int i=0; i<2499; i++) { floorMap.data[i] = 2; }  
   pid_drive.setConfig(pidCfg_drive);
   pid_drive.setParam(pidParam_drive);
 }
 
+void setup() {
+  initMatrix();
+  Serial.begin(9600);
+  #ifdef DEBUG_TEST
+    ioSim.setup();
+    ioSim.setPinMode(1, 1);
+    ioSim.setPinClock(1, 2000, 2000);
+    ioSim.setPinMode(2,2);
+    pid_drive.setConfig(pidCfg_drive);
+    pid_drive.setParam(pidParam_drive);    
+    return;
+  #endif
+  initIO();
+  initDevice();
+  initAbstract();
+}
+
 void loop() {
+  #ifdef DEBUG_TEST
+    int newSPCount;
+    testClock.setup(0);
+    int pv = 0;
+    int sp = 100;
+    int cv = 0;
+    while(true) {
+      ioSim.update();
+      int clock;
+      clock = (int) testClock.update(!testClock.getState(), 200, 200);
+    }
+  #endif
+
   // Answer client requests
   if (server.requestAvailable() != "") { server.respond(floorMap.data); }
 
@@ -81,8 +125,10 @@ void loop() {
 
   // Control Ultrasonic
   Vector vPing;
-  vPing.dir = heading + stepperPos;
-  //vPing.dist = conditional on ping request 
+  if (stepperPos == uc.pos) {
+    vPing.dir = heading + stepperPos;
+    vPing.dist = us.getRangeCM();
+  } else { vPing.dist = 0; }
 
   // Send events to floorMap
   if (encoderPulse.update(digitalRead(PIN_ENCODER), 50, 50)) { floorMap.step(); }
