@@ -6,7 +6,7 @@
 class Compass {
   public:		
 	  Compass();
-    void setup();
+    int setup();
     int getHeading();
   private:
     Magnetometer mag;

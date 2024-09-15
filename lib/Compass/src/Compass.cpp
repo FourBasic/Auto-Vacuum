@@ -4,13 +4,13 @@
 
 Compass::Compass() { }
 
-void Compass::setup() {
+int Compass::setup() {
     if (!Serial) { Serial.begin(9600); }
 
     if (mag.begin() != 0) {
         Serial.println("Error connecting to Magnetometer");
         fail = true;
-        return;
+        return -1;
     }
     // set the amount of gain - Use the most sensitive
     // for reading the earths magnetic field
@@ -25,6 +25,7 @@ void Compass::setup() {
     // 330      +- 5.6 Ga
     // 230      +- 8.1 Ga
     mag.setGain(HMC5833L_GAIN_1370);
+    return 0;
 }
 
 int Compass::getHeading() {

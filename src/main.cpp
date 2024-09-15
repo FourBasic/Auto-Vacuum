@@ -10,7 +10,8 @@ Debounce testClock;
 
 /* #region INCLUDE */
 #include <Arduino.h>
-#include "Arduino_LED_Matrix.h"
+//#include "Arduino_LED_Matrix.h"
+#include "GeneralFunctions.h"
 #include "WiFiS3.h"
 #include "WiFiWebServer.h"
 #include "UltrasonicRange.h"
@@ -21,12 +22,23 @@ Debounce testClock;
 /* #endregion */
 
 /* #region DEFINE_IO_PINS */
-#define PIN_ENCODER 1
+#define PIN_ENCODER 2
 #define PIN_BUMPSENSOR 2
+#define PIN_MTRL_FWD 7
+#define PIN_MTRL_REV 8
+#define PIN_MTRL_SPD 11
+#define PIN_MTRR_FWD 4
+#define PIN_MTRR_REV 13
+#define PIN_MTRR_SPD 9
+/* #endregion */
+
+/* #region CONFIG*/
+const PIDConfiguration pidCfg_drive {1, -255, 255, false, 10, 50};
+const PIDParameters pidParam_drive {9.0, 0.0, 0.0};
 /* #endregion */
 
 /* #region GLOBAL_VAR */
-ArduinoLEDMatrix matrix;
+//ArduinoLEDMatrix matrix;
 WiFiWebServer server(80);
 char ssid[] = "@";
 char pass[] = "@";
@@ -35,8 +47,6 @@ Compass compass;
 Debounce encoderPulse;
 Map2D floorMap;
 AwfulPID pid_drive;
-const PIDConfiguration pidCfg_drive {1, 0, 100, false};
-const PIDParameters pidParam_drive {0.2, 0.5, 0.0};
 // Scratch *********########
 int stepperPos;
 /* #endregion */
@@ -45,6 +55,12 @@ int stepperPos;
 void initIO() {
   pinMode(PIN_ENCODER, INPUT);
   pinMode(PIN_BUMPSENSOR, INPUT);
+  pinMode(PIN_MTRL_FWD, OUTPUT);
+  pinMode(PIN_MTRL_REV, OUTPUT);
+  pinMode(PIN_MTRL_SPD, OUTPUT);
+  pinMode(PIN_MTRR_FWD, OUTPUT);
+  pinMode(PIN_MTRR_REV, OUTPUT);
+  pinMode(PIN_MTRR_SPD, OUTPUT);
 }
 
 void initMatrix() {
@@ -65,8 +81,8 @@ void initMatrix() {
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
   };
-  matrix.begin();
-  matrix.renderBitmap(frame, 8, 12);  
+  //matrix.begin();
+  //matrix.renderBitmap(frame, 8, 12);  
 }
 
 void initDevice() {
@@ -82,16 +98,26 @@ void initAbstract() {
   pid_drive.setParam(pidParam_drive);
 }
 
+void initTest() {
+  ioSim.setup();
+  ioSim.setPinMode(1, 1);
+  ioSim.setPinClock(1, 2000, 2000);
+  ioSim.setPinMode(2,2);
+  pid_drive.setConfig(pidCfg_drive);
+  pid_drive.setParam(pidParam_drive);
+  delay(1000);
+  Serial.println("Hello");
+  delay(1000);
+  if (compass.setup() == -1) { while(true) {} }
+  delay(200);
+  Serial.println("Here We Go");
+}
+
 void setup() {
   initMatrix();
   Serial.begin(9600);
   #ifdef DEBUG_TEST
-    ioSim.setup();
-    ioSim.setPinMode(1, 1);
-    ioSim.setPinClock(1, 2000, 2000);
-    ioSim.setPinMode(2,2);
-    pid_drive.setConfig(pidCfg_drive);
-    pid_drive.setParam(pidParam_drive);    
+    initTest();
     return;
   #endif
   initIO();
@@ -103,15 +129,41 @@ void setup() {
 void loop() {
   /* #region TEST */
   #ifdef DEBUG_TEST
-    int newSPCount;
     testClock.setup(0);
-    int pv = 0;
-    int sp = 100;
-    int cv = 0;
+
     while(true) {
       ioSim.update();
-      int clock;
-      clock = (int) testClock.update(!testClock.getState(), 200, 200);
+      int heading360;
+      testClock.update(!testClock.getState(), 100, 100);
+      if (testClock.getTransitionFlag()) {
+        testClock.resetTransitionFlag();
+        heading360 = compass.getHeading();
+
+        int speedBias = pid_drive.update(0x01, heading360, 270);
+        int speed = abs(speedBias);
+        if (speed < 90) { speed = 0; }
+
+        if (speedBias > 0) {
+          analogWrite(PIN_MTRL_FWD, 0); analogWrite(PIN_MTRL_REV, 255);
+          analogWrite(PIN_MTRR_FWD, 255); analogWrite(PIN_MTRR_REV, 0);        
+        } else {
+          analogWrite(PIN_MTRL_FWD, 255); analogWrite(PIN_MTRL_REV, 0);
+          analogWrite(PIN_MTRR_FWD, 0); analogWrite(PIN_MTRR_REV, 255);    
+        }
+        
+        analogWrite(PIN_MTRL_SPD, speed);
+        analogWrite(PIN_MTRR_SPD, speed);
+      }
+
+      
+
+      //delay(100);
+
+      //Serial.println(speedBias);
+      //Serial.println(speed);
+      //Serial.println(pid_drive.getError());
+      //Serial.println("");
+      //delay(1000);
     }
   #endif
   /* #endregion */
@@ -125,12 +177,25 @@ void loop() {
   USCommand uc = floorMap.getUSCommand();
 
   // Get heading from compass
-  int heading = compass.getHeading();
+  int heading360 = compass.getHeading();
+  int heading180;
+  if (heading360 < 180) { heading180 = heading360; }
+  else { heading180 = heading360 - 360; }
 
   // Control Motors
   if (dc.speed) {
     // Control loop for error between compass heading and command heading
-    int speedBias = pid_drive.update(0x01, heading, dc.v.dir);
+    // ****** Need to manipulate SP because of 360deg rollover and optimal path CW/CCW
+    int pv_driveDir = heading360;
+    int sp_driveDir = dc.v.dir;
+    //int diffCW = 
+    //int diffCCW =  
+    
+    int speedBias = pid_drive.update(0x01, heading360, dc.v.dir);
+    
+    // If error is large (unstable), default to turning on the spot. Otherwise take speed cmd.
+    int forwardSpeed = 0;
+    if (pid_drive.getStability()) { forwardSpeed = dc.speed; }
     // Use speedBias to increase one motor speed while decreasing the other, causing rotation
     int mtrSpeed_R = dc.speed + speedBias;
     int mtrSpeed_L = dc.speed - speedBias;
@@ -139,7 +204,7 @@ void loop() {
   // Control Ultrasonic
   Vector vPing;
   if (stepperPos == uc.pos) {
-    vPing.dir = heading + stepperPos;
+    vPing.dir = heading360 + stepperPos;
     vPing.dist = us.getRangeCM();
   } else { vPing.dist = 0; }
 

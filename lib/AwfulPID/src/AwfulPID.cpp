@@ -30,6 +30,8 @@ int AwfulPID::update(byte ctrl, int _PV, int _SP) {
         CV = cfg.outMn;
         acc_ki = 0;      
         err_last = 0;
+        stable = false;
+        stableCycles = 0;
 
         // Prime timer to start on new cycle
         cycleTimer.update(cycleTimer.getState(),cfg.period_ms,cfg.period_ms);
@@ -48,6 +50,7 @@ int AwfulPID::update(byte ctrl, int _PV, int _SP) {
             
             // Calculations
             int err = calculateError();
+            //Serial.println(err);
             if (err != 0) {
                 int term_kp;
                 int term_kd = 0;
@@ -55,7 +58,23 @@ int AwfulPID::update(byte ctrl, int _PV, int _SP) {
                 if (param.ki > 0.00001) { acc_ki = acc_ki + (param.ki * err); }
                 if (param.kd > 0.00001) { term_kd = param.kd * (err - err_last); }
                 CV = term_kp + acc_ki + term_kd;
-            }        
+            }
+
+            // Monitor stability - Accumulate cycles
+            if (abs(err) < cfg.stableTol) { stableCycles++; }
+            else { stableCycles--; }
+
+            // Set stable flag based on cycle accumulation
+            if (stableCycles >= cfg.stablePeriodCount) {
+                stableCycles = cfg.stablePeriodCount;
+                stable = true;
+            } else if (stableCycles < 1) {
+                stableCycles = 0;
+                stable = false;
+            }
+
+            // Hold on to this error for next calculation
+            err_last = err;
         }    
     } else if (ctrl == TIEBACK) {
 
@@ -79,4 +98,8 @@ int AwfulPID::getError() {
 
 int AwfulPID::getCV() {
     return CV;
+}
+
+bool AwfulPID::getStability() {
+    return stable;
 }
