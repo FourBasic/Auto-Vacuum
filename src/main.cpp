@@ -33,7 +33,7 @@ Debounce testClock;
 /* #endregion */
 
 /* #region CONFIG*/
-const PIDConfiguration pidCfg_drive {1, -255, 255, false, 10, 50};
+const PIDConfiguration pidCfg_drive {1, -70, 70  , false, 10, 50};
 const PIDParameters pidParam_drive {9.0, 0.0, 0.0};
 /* #endregion */
 
@@ -108,7 +108,7 @@ void initTest() {
   delay(1000);
   Serial.println("Hello");
   delay(1000);
-  if (compass.setup() == -1) { while(true) {} }
+  if (compass.setup() == -1) { while(1) {} }
   delay(200);
   Serial.println("Here We Go");
 }
@@ -133,15 +133,16 @@ void loop() {
 
     while(true) {
       ioSim.update();
-      int heading360;
       testClock.update(!testClock.getState(), 100, 100);
       if (testClock.getTransitionFlag()) {
         testClock.resetTransitionFlag();
+
+        int heading360;
         heading360 = compass.getHeading();
 
         int speedBias = pid_drive.update(0x01, heading360, 270);
         int speed = abs(speedBias);
-        if (speed < 90) { speed = 0; }
+        if (speed < 50) { speed = 0; }
 
         if (speedBias > 0) {
           analogWrite(PIN_MTRL_FWD, 0); analogWrite(PIN_MTRL_REV, 255);
@@ -153,17 +154,12 @@ void loop() {
         
         analogWrite(PIN_MTRL_SPD, speed);
         analogWrite(PIN_MTRR_SPD, speed);
+
+        Serial.println(speedBias);
+        //Serial.println(speed);
+        //Serial.println(pid_drive.getError());
+        Serial.println("");
       }
-
-      
-
-      //delay(100);
-
-      //Serial.println(speedBias);
-      //Serial.println(speed);
-      //Serial.println(pid_drive.getError());
-      //Serial.println("");
-      //delay(1000);
     }
   #endif
   /* #endregion */
