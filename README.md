@@ -21,5 +21,4 @@ Attempting to design a battery powered vacuum that can:
 
 ![image](https://github.com/user-attachments/assets/8dfb0526-38e5-4259-90d3-f3a3dc445531)
 
-![image](https://github.com/user-attachments/assets/fbf40d74-7c36-42f2-b5a4-1df59ab3505f)
-
+![Screenshot from 2024-09-22 12-56-42](https://github.com/user-attachments/assets/a9852cd0-272e-4199-a86c-699a4be4a330)
