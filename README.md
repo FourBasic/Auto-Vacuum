@@ -1,8 +1,9 @@
 WORK IN PROGRESS
 
-PlatformIO Source Code for the 3D-printed Auto-Vacuum - https://makerworld.com/en/models/
-
+PlatformIO Source Code for the 3D-printed Auto-Vacuum
 Arduino Uno R4 Wifi
+
+CAD - https://cad.onshape.com/documents/eea0d15e9e3c86644c471f6e/w/5db2f025dccb5d182f8a3442/e/d2089aca2580d8d13c74baf3?renderMode=0&uiState=66f05397396eef09f7064db2
 
 Attempting to design a battery powered vacuum that can:
 1) Build a floor map
