@@ -49,8 +49,7 @@ int AwfulPID::update(byte ctrl, int _PV, int _SP) {
             SP = _SP;
             
             // Calculations
-            int err = calculateError();
-            //Serial.println(err);
+            int err = calculateError();            
             if (err != 0) {
                 int term_kp;
                 int term_kd = 0;

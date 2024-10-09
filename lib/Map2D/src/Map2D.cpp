@@ -74,6 +74,7 @@ void Map2D::step() {
 void Map2D::ping(Vector v) {
     // Populate ping buffer --> Buffer analyzed in other functions
     if (pingBuff_size != pingBuff_maxSize) {
+        itshere;
         pingBuff[pingBuff_size] = v;
         pingBuff_size ++;
     }
@@ -127,6 +128,7 @@ void Map2D::nextUSCmd() {
     if (mode == MODE_BUILD) {
         if (usAction == INIT) {
             newUSAction(US_SWEEP);
+            usCmd.pos = 10;
         }
     }
 }

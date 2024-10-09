@@ -39,7 +39,7 @@ int Compass::getHeading() {
     // reads the heading in degrees using the X and Y axis
     int8_t ret = mag.readHeadingDeg(&heading);    
     //int8_t ret = mag.readRaw(&x,&y,&z);    
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
     switch (ret) {
         case HMC5833L_ERROR_GAINOVERFLOW:
             Serial.println("Gain Overflow");
@@ -53,9 +53,9 @@ int Compass::getHeading() {
     }
     
     // print them out
-    Serial.print("Heading: ");
-    Serial.print(heading);
-    Serial.println(" degrees");
+    //Serial.print("Heading: ");
+    //Serial.print(heading);
+    //Serial.println(" degrees");
 
     return heading;
 }

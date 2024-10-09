@@ -23,12 +23,16 @@ uint16_t UltrasonicRange::getRangeCM() {
     // measure duration of pulse from ECHO pin
     int duration;
     duration = pulseIn(PIN_ECHO, HIGH, pulseTO);
+
     // calculate the distance - Will return 0 when out of range
     uint16_t dist = 0;
     if (!duration) {
+        Serial.println("O/R");
         return dist;
     } else {
         dist = 0.017 * duration;
+        Serial.print(dist);
+        Serial.println(" cm");
         return dist;
     }
 }
