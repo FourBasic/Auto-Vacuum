@@ -1,27 +1,7 @@
 /* #region INCLUDE */
 #include "Map2D.h"
 #include <Arduino.h>
-/* #endregion */
-
-/* #region DEFINE_ACTION_CONTEXT */
-#define MODE_BUILD 1
-#define MODE_CLEAN 2
-#define INIT 1
-#define COLLISION 2
-#define COMPLETE 3
-#define WALLRIDE 4
-#define OPENAREA 5
-#define US_SWEEP 6
-#define CRUISE 7
-#define WAIT 8
-/* #endregion */
-
-/* #region DEFINE_GRID_TYPES */
-#define GRID_UNKNOWN 0
-#define GRID_SOLID 1
-#define GRID_BORDER 2
-#define GRID_DIVIDER 3
-#define GRID_EMPTY 4
+#include "GeneralFunctions.h"
 /* #endregion */
 
 /* #region DEFINE_FUNCTION_MODIFIER */
@@ -39,6 +19,8 @@ void Map2D::setup() {
     c.x = 0;
     c.y = 0;
     setPosGrid(c);
+    pingBuff_size = 0;
+    usCmd.pos = -1;
     // Check EEPROM if map exists and load into memory, otherwise build
     // Just build for initial testing
     newMode(MODE_BUILD);
@@ -60,6 +42,19 @@ void Map2D::update() {
     if (driveAction == COMPLETE) { nextDriveCmd(); }
     if (usAction == COMPLETE) { nextUSCmd(); }
 
+    // Completion conditions for sweep
+    if (usAction == US_SWEEP) {
+        if (pingBuff_size < 4) {
+            usCmd.pos = (pingBuff_size * 45)+90;
+        } else {
+            usCmd.pos = -1;
+            pingBuffToGrid(GRID_SOLID);
+            //gridSolidify();            
+            //gridMarkEmpty();
+            newUSAction(COMPLETE);
+        }
+    }
+
 }
 
 // Counts drive steps to flag drive action completion
@@ -74,14 +69,14 @@ void Map2D::step() {
 void Map2D::ping(Vector v) {
     // Populate ping buffer --> Buffer analyzed in other functions
     if (pingBuff_size != pingBuff_maxSize) {
-        itshere;
+        //itshere;
         pingBuff[pingBuff_size] = v;
         pingBuff_size ++;
     }
     // else compare with map expected values and issue corrections
-    if (v.dir == 360) {
-        usAction = COMPLETE;
-    }
+    //if (v.dir == 360) {
+        //usAction = COMPLETE;
+    //}
 }
 
 // Unexpected event, need to recalculate
@@ -112,10 +107,7 @@ void Map2D::nextDriveCmd() {
         if (driveAction == INIT) {
             newDriveAction(WAIT);
             driveCmd.speed = 0;
-        } else if (driveAction == COMPLETE) {
-            pingBuffToGrid(GRID_SOLID);
-            gridSolidify();            
-            gridMarkEmpty();
+        } else if (driveAction == COMPLETE) {            
             driveCmd.speed = 255;
             driveCmd.v.dir = 50;
             driveCmd.v.dist = 50;
@@ -128,7 +120,9 @@ void Map2D::nextUSCmd() {
     if (mode == MODE_BUILD) {
         if (usAction == INIT) {
             newUSAction(US_SWEEP);
-            usCmd.pos = 10;
+            //usCmd.function = US_SWEEP;
+            //usCmd.pos = 0;
+            usCmd.pos = (pingBuff_size * 45)+90;
         }
     }
 }
@@ -143,18 +137,36 @@ void Map2D::markEnclosedArea() {
 }
 
 // Convert ping buff relative v to grid absolute XY
-void Map2D::pingBuffToGrid(uint8_t type) {
+void Map2D::pingBuffToGrid(uint8_t type) {    
     for (int i=0; i<pingBuff_size; i++) {
-        // Break the ping buffer data into XY components
-        CoordinatesXY pingComponent = splitVector(pingBuff[i]);
-        
-        // Determine the grid position of the ping by adding components to current position
-        CoordinatesXY gridCoord;
-        gridCoord.x = pingComponent.x + posGrid.x;
-        gridCoord.y = pingComponent.y + posGrid.y;
+        // Skip out of range pings (-1)
+        if (pingBuff[i].dist != -1) {
+            // Break the ping buffer data into XY components
+            CoordinatesXY pingComponent = splitVector(pingBuff[i]);
+            
+            // Scale vectors to gridaquare size
+            pingComponent.x = pingComponent.x / gridSquareSize;
+            pingComponent.y = pingComponent.y / gridSquareSize;
 
-        // Write type to grid position
-        setMapData(gridCoord, GRID_SOLID);
+            // Determine the grid position of the ping by adding components to current position
+            CoordinatesXY gridCoord;
+            gridCoord.x = pingComponent.x + posGrid.x;
+            gridCoord.y = pingComponent.y + posGrid.y;
+            
+            // Limit to array size
+            // Need to deal with negatives by shifting map!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            gridCoord.x = limit(0, gridCoord.x, gridSize);
+            gridCoord.y = limit(0, gridCoord.y, gridSize);
+
+            Serial.print("coordX=");
+            Serial.print(gridCoord.x);
+            Serial.print(" - coordY=");
+            Serial.println(gridCoord.y);
+
+            // Write type to grid position
+            setMapData(gridCoord, GRID_SOLID);
+            //i = 99;
+        } else {Serial.print("O/R");}
     }
 }
 
@@ -185,8 +197,8 @@ void Map2D::gridMarkEmpty() {
 void Map2D::setPosGrid(CoordinatesXY c) {
     posGrid.x = c.x;
     posGrid.y = c.y;
-    pos.x = posGrid.x * stepSize;
-    pos.y = posGrid.y * stepSize;
+    pos.x = posGrid.x * gridSquareSize;
+    pos.y = posGrid.y * gridSquareSize;
 }
 
 // Split Hypotenuse

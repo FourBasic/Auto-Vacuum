@@ -109,7 +109,7 @@ void initDevice() {
 
 void initAbstract() {
   floorMap.setup();
-  for (int i=0; i<2499; i++) { floorMap.data[i] = 2; }  
+  //for (int i=0; i<2499; i++) { floorMap.data[i] = 2; }  
   pid_drive.setConfig(pidCfg_drive);
   pid_drive.setParam(pidParam_drive);
 }
@@ -218,13 +218,18 @@ void loop() {
   }
 
   // Control Ultrasonic
-    int xpos = map(0,-194,166,0,180);
+  //int xpos = map(0,-194,166,0,180);
+  if (uc.pos > -1) {
+    int xpos = map(uc.pos,0,360,1,179);
     myservo.write(xpos); //98 //8
-    delay(500);
+    delay(1000);
+    stepperPos = uc.pos;
+  }
     //Serial.println(stepperPos);
   Vector vPing;
   if (stepperPos == uc.pos) {
-    vPing.dir = heading360 + stepperPos;
+    //vPing.dir = heading360 + stepperPos;
+    vPing.dir = stepperPos;
     vPing.dist = us.getRangeCM();
     Serial.print("dir ");
     Serial.print(vPing.dir);
@@ -232,11 +237,11 @@ void loop() {
     Serial.println(vPing.dist);
   } else { vPing.dist = 0; }  
 
-  stepperPos = stepperPos + 1;
+  
 
   // Send events to floorMap
   if (encoderPulse.update(digitalRead(PIN_ENCODER), 50, 50)) { floorMap.step(); }
-  if (vPing.dist) { floorMap.ping(vPing); }
+  if (vPing.dist != 0) { floorMap.ping(vPing); }
   if (digitalRead(PIN_BUMPSENSOR)) { floorMap.collision(); }
   floorMap.update();
   /* #endregion */

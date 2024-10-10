@@ -31,8 +31,8 @@ uint16_t UltrasonicRange::getRangeCM() {
         return dist;
     } else {
         dist = 0.017 * duration;
-        Serial.print(dist);
-        Serial.println(" cm");
+        //Serial.print(dist);
+        //Serial.println(" cm");
         return dist;
     }
 }
