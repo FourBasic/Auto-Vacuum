@@ -14,7 +14,7 @@ UltrasonicRange::UltrasonicRange(uint8_t trig, uint8_t echo, int rangeCM) {
     pulseTO = maxRange / 0.017;
 }
 
-uint16_t UltrasonicRange::getRangeCM() {
+int UltrasonicRange::getRangeCM() {
     // generate 10-microsecond pulse to TRIG pin
     digitalWrite(PIN_TRIG, HIGH);
     delayMicroseconds(10);
@@ -25,11 +25,11 @@ uint16_t UltrasonicRange::getRangeCM() {
     duration = pulseIn(PIN_ECHO, HIGH, pulseTO);
 
     // calculate the distance - Will return 0 when out of range
-    uint16_t dist = 0;
     if (!duration) {
         Serial.println("O/R");
-        return dist;
+        return -1;
     } else {
+        int dist = 0;
         dist = 0.017 * duration;
         //Serial.print(dist);
         //Serial.println(" cm");

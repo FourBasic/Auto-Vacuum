@@ -16,8 +16,8 @@ Map2D::Map2D() { }
 // Initialize & retrieve map from EEPROM
 void Map2D::setup() {
     CoordinatesXY c;
-    c.x = 0;
-    c.y = 0;
+    c.x = 24;
+    c.y = 24;
     setPosGrid(c);
     pingBuff_size = 0;
     usCmd.pos = -1;
@@ -72,7 +72,11 @@ void Map2D::ping(Vector v) {
         //itshere;
         pingBuff[pingBuff_size] = v;
         pingBuff_size ++;
-    }
+        Serial.print("dir ");
+        Serial.print(v.dir);
+        Serial.print(" - dist ");
+        Serial.println(v.dist);
+    } else { Serial.println("ping reject"); }
     // else compare with map expected values and issue corrections
     //if (v.dir == 360) {
         //usAction = COMPLETE;
@@ -143,7 +147,7 @@ void Map2D::pingBuffToGrid(uint8_t type) {
         if (pingBuff[i].dist != -1) {
             // Break the ping buffer data into XY components
             CoordinatesXY pingComponent = splitVector(pingBuff[i]);
-            
+
             // Scale vectors to gridaquare size
             pingComponent.x = pingComponent.x / gridSquareSize;
             pingComponent.y = pingComponent.y / gridSquareSize;
@@ -151,8 +155,8 @@ void Map2D::pingBuffToGrid(uint8_t type) {
             // Determine the grid position of the ping by adding components to current position
             CoordinatesXY gridCoord;
             gridCoord.x = pingComponent.x + posGrid.x;
-            gridCoord.y = pingComponent.y + posGrid.y;
-            
+            gridCoord.y = pingComponent.y + posGrid.y;            
+
             // Limit to array size
             // Need to deal with negatives by shifting map!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             gridCoord.x = limit(0, gridCoord.x, gridSize);
@@ -199,6 +203,7 @@ void Map2D::setPosGrid(CoordinatesXY c) {
     posGrid.y = c.y;
     pos.x = posGrid.x * gridSquareSize;
     pos.y = posGrid.y * gridSquareSize;
+    setMapData(posGrid, GRID_MYPOS);
 }
 
 // Split Hypotenuse

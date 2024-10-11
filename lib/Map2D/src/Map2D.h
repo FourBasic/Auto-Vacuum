@@ -8,6 +8,7 @@
 #define GRID_BORDER 2
 #define GRID_DIVIDER 3
 #define GRID_EMPTY 4
+#define GRID_MYPOS 2
 /* #endregion */
 
 /* #region DEFINE_ACTION_CONTEXT */

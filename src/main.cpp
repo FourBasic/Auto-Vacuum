@@ -103,7 +103,7 @@ void initMatrix() {
 void initDevice() {
   compass.setup();
   encoderPulse.setup(digitalRead(PIN_ENCODER));
-  //server.setup(ssid, pass, 192, 168, 51, 236);
+  server.setup(ssid, pass, 192, 168, 51, 236);
   myservo.attach(PIN_SERVO, 760,2260); //760,2260
 }
 
@@ -186,7 +186,7 @@ void loop() {
 
   /* #region MAIN */
   // Answer client requests
-  //if (server.requestAvailable() != "") { server.respond(floorMap.data); }
+  if (server.requestAvailable() != "") { server.respond(floorMap.data); }
 
   // Get commands from floorMap
   DriveCommand dc = floorMap.getDriveCommand();
@@ -230,14 +230,8 @@ void loop() {
   if (stepperPos == uc.pos) {
     //vPing.dir = heading360 + stepperPos;
     vPing.dir = stepperPos;
-    vPing.dist = us.getRangeCM();
-    Serial.print("dir ");
-    Serial.print(vPing.dir);
-    Serial.print(" - dist ");
-    Serial.println(vPing.dist);
+    vPing.dist = us.getRangeCM();    
   } else { vPing.dist = 0; }  
-
-  
 
   // Send events to floorMap
   if (encoderPulse.update(digitalRead(PIN_ENCODER), 50, 50)) { floorMap.step(); }

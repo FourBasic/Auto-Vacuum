@@ -5,7 +5,7 @@
 class UltrasonicRange {
   public:		
 		  UltrasonicRange(uint8_t trig, uint8_t echo, int rangeCM);
-      uint16_t getRangeCM();
+      int getRangeCM();
   private:
 		  int status;
       uint8_t PIN_TRIG;
