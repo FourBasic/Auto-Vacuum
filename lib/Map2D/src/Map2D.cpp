@@ -20,12 +20,13 @@ void Map2D::setup() {
     c.y = 24;
     setPosGrid(c);
     pingBuff_size = 0;
-    usCmd.pos = -1;
+    usCmd.pos = 0;
+    usCmd.function = CMD_SERVO_GOTO_POS;
     // Check EEPROM if map exists and load into memory, otherwise build
     // Just build for initial testing
     newMode(MODE_BUILD);
-    newDriveAction(INIT);
-    newUSAction(INIT);
+    newDriveAction(ACTION_INIT);
+    newUSAction(ACTION_INIT);
     nextDriveCmd();
     nextUSCmd();
 }
@@ -35,23 +36,24 @@ void Map2D::update() {
     // timers?
 
     // Set complete when wait condition is satisfied
-    if (driveAction == WAIT && usAction == COMPLETE) { newDriveAction(COMPLETE); }
-    if (usAction == WAIT && driveAction == COMPLETE) { newUSAction(COMPLETE); }
+    if (driveAction == ACTION_WAIT && usAction == ACTION_COMPLETE) { newDriveAction(ACTION_COMPLETE); }
+    if (usAction == ACTION_WAIT && driveAction == ACTION_COMPLETE) { newUSAction(ACTION_COMPLETE); }
 
     // Generate next command on complete
-    if (driveAction == COMPLETE) { nextDriveCmd(); }
-    if (usAction == COMPLETE) { nextUSCmd(); }
+    if (driveAction == ACTION_COMPLETE) { nextDriveCmd(); }
+    if (usAction == ACTION_COMPLETE) { nextUSCmd(); }
 
     // Completion conditions for sweep
-    if (usAction == US_SWEEP) {
+    if (usAction == ACTION_US_SWEEP) {
         if (pingBuff_size < 4) {
             usCmd.pos = (pingBuff_size * 45)+90;
         } else {
-            usCmd.pos = -1;
+            usCmd.function = CMD_SERVO_GOTO_POS;
+            usCmd.pos = 0;
             pingBuffToGrid(GRID_SOLID);
             //gridSolidify();            
             //gridMarkEmpty();
-            newUSAction(COMPLETE);
+            newUSAction(ACTION_COMPLETE);
         }
     }
 
@@ -61,7 +63,7 @@ void Map2D::update() {
 void Map2D::step() {
     movement.dist = movement.dist + stepSize;
     if (movement.dist >= driveCmd.v.dist) {
-        driveAction = COMPLETE;
+        driveAction = ACTION_COMPLETE;
     }
 }
 
@@ -85,8 +87,8 @@ void Map2D::ping(Vector v) {
 
 // Unexpected event, need to recalculate
 void Map2D::collision() {
-    driveAction = COLLISION;
-    usAction = COLLISION;
+    driveAction = ACTION_COLLISION;
+    usAction = ACTION_COLLISION;
     nextDriveCmd();
     nextUSCmd();
 }
@@ -108,10 +110,10 @@ USCommand Map2D::getUSCommand() {
 // Determine the next drive command
 void Map2D::nextDriveCmd() {
     if (mode == MODE_BUILD) {
-        if (driveAction == INIT) {
-            newDriveAction(WAIT);
+        if (driveAction == ACTION_INIT) {
+            newDriveAction(ACTION_WAIT);
             driveCmd.speed = 0;
-        } else if (driveAction == COMPLETE) {            
+        } else if (driveAction == ACTION_COMPLETE) {            
             driveCmd.speed = 255;
             driveCmd.v.dir = 50;
             driveCmd.v.dist = 50;
@@ -122,10 +124,9 @@ void Map2D::nextDriveCmd() {
 // Determine the next ultrasonic command
 void Map2D::nextUSCmd() {
     if (mode == MODE_BUILD) {
-        if (usAction == INIT) {
-            newUSAction(US_SWEEP);
-            //usCmd.function = US_SWEEP;
-            //usCmd.pos = 0;
+        if (usAction == ACTION_INIT) {
+            newUSAction(ACTION_US_SWEEP);
+            usCmd.function = CMD_SERVO_GOTO_PING;
             usCmd.pos = (pingBuff_size * 45)+90;
         }
     }

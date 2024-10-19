@@ -14,14 +14,21 @@
 /* #region DEFINE_ACTION_CONTEXT */
 #define MODE_BUILD 1
 #define MODE_CLEAN 2
-#define INIT 1
-#define COLLISION 2
-#define COMPLETE 3
-#define WALLRIDE 4
-#define OPENAREA 5
-#define US_SWEEP 6
-#define CRUISE 7
-#define WAIT 8
+#define ACTION_INIT 1
+#define ACTION_COLLISION 2
+#define ACTION_COMPLETE 3
+#define ACTION_WALLRIDE 4
+#define ACTION_OPENAREA 5
+#define ACTION_US_SWEEP 6
+#define ACTION_CRUISE 7
+#define ACTION_WAIT 8
+/* #endregion */
+
+/* #region DEFINE_COMMAND */
+#define CMD_SERVO_HOLD 0
+#define CMD_SERVO_GOTO_POS 1
+#define CMD_SERVO_GOTO_PING 2
+
 /* #endregion */
 
 struct CoordinatesXY {
@@ -38,7 +45,7 @@ struct DriveCommand {
 };
 
 struct USCommand {
-   //int function;
+   int function;
    int pos;
 };
 

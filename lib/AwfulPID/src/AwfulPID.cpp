@@ -3,11 +3,6 @@
 #include "Debounce.h"
 #include "GeneralFunctions.h"
 
-#define INIT        0x00
-#define ENABLE      0x01
-#define TIEBACK     0x02
-#define MANUAL      0x03
-
 AwfulPID::AwfulPID() {
 
 }
@@ -25,8 +20,8 @@ void AwfulPID::setManual(int val) {
 }
 
 int AwfulPID::update(byte ctrl, int _PV, int _SP) {    
-    if (ctrl == INIT) {
-        // Clear and init
+    if (ctrl == PID_INIT) {
+        // Clear and PID_INIT
         CV = cfg.outMn;
         acc_ki = 0;      
         err_last = 0;
@@ -36,8 +31,8 @@ int AwfulPID::update(byte ctrl, int _PV, int _SP) {
         // Prime timer to start on new cycle
         cycleTimer.update(cycleTimer.getState(),cfg.period_ms,cfg.period_ms);
 
-    } else if (ctrl == ENABLE) {
-        // Use timer to create a continous clock frequency while enabled
+    } else if (ctrl == PID_ENABLE) {
+        // Use timer to create a continous clock frequency while PID_ENABLEd
         cycleTimer.update(!cycleTimer.getState(),cfg.period_ms,cfg.period_ms);
         
         // Recalc on every timer transition
@@ -75,9 +70,9 @@ int AwfulPID::update(byte ctrl, int _PV, int _SP) {
             // Hold on to this error for next calculation
             err_last = err;
         }    
-    } else if (ctrl == TIEBACK) {
+    } else if (ctrl == PID_TIEBACK) {
 
-    } else if (ctrl == MANUAL) {
+    } else if (ctrl == PID_MANUAL) {
         CV = MV;
     }    
     CV = limit(cfg.outMn, CV, cfg.outMx);

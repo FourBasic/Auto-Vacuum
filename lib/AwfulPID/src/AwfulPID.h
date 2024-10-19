@@ -4,6 +4,11 @@
 #include "Debounce.h"
 #include "GeneralFunctions.h"
 
+#define PID_INIT        0x00
+#define PID_ENABLE      0x01
+#define PID_TIEBACK     0x02
+#define PID_MANUAL      0x03
+
 // period_ms / outMn / outMx / reverseActing / stableTol / stablePeriodCount
 struct PIDConfiguration{
   unsigned int period_ms;

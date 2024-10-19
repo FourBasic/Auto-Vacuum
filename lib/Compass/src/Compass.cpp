@@ -12,9 +12,6 @@ int Compass::setup() {
         fail = true;
         return -1;
     }
-    // set the amount of gain - Use the most sensitive
-    // for reading the earths magnetic field
-    // 
     // MSB/Gauss   Field Range
     // 1370     +- 0.88 Ga
     // 1090     +- 1.3 Ga
@@ -28,7 +25,7 @@ int Compass::setup() {
     return 0;
 }
 
-int Compass::getHeading() {
+int Compass::update() {
     // don't bother reading if we failed to connect
     if (fail)
         return -1;
@@ -45,17 +42,26 @@ int Compass::getHeading() {
             Serial.println("Gain Overflow");
             return -1;
         case 0:
-            // success
             break;
         default:
             Serial.println("Failed to read Magnetometer");
             return -1;
     }
     
-    // print them out
     //Serial.print("Heading: ");
     //Serial.print(heading);
     //Serial.println(" degrees");
-
+    heading360 = heading;
+    if (heading360 < 180) { heading180 = heading360; }
+    else { heading180 = heading360 - 360; }
     return heading;
+}
+
+int Compass::get360() {
+    return heading360;
+}
+
+//  +-180
+int Compass::get180() {
+    return heading180;
 }

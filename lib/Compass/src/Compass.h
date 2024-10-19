@@ -7,9 +7,12 @@ class Compass {
   public:		
 	  Compass();
     int setup();
-    int getHeading();
+    int update();
+    int get360();
+    int get180();
   private:
     Magnetometer mag;
     bool fail;
+    int heading360, heading180;
 };
 #endif

@@ -55,8 +55,8 @@ Debounce encoderPulse;
 Map2D floorMap;
 AwfulPID pid_drive;
 // Scratch *********########
-int stepperPos = 0;
-int spos = 0;
+int servoPos = 0;
+
 /* #endregion */
 
 /* #region SETUP */
@@ -142,6 +142,53 @@ void setup() {
 }
 /* #endregion */
 
+/* #region FUNCTION */
+void controlMotor() {
+  DriveCommand dc = floorMap.getDriveCommand();
+  int heading = compass.get180();
+  if (dc.speed) {
+    // Control loop for error between compass heading and command heading
+    // ****** Need to manipulate SP because of 360deg rollover and optimal path CW/CCW
+    int pv_driveDir = heading;
+    int sp_driveDir = dc.v.dir;
+    //int diffCW = 
+    //int diffCCW =  
+    
+    int speedBias = pid_drive.update(PID_ENABLE, heading, dc.v.dir);
+    
+    // If error is large (unstable), default to turning on the spot. Otherwise take speed cmd.
+    int forwardSpeed = 0;
+    if (pid_drive.getStability()) { forwardSpeed = dc.speed; }
+    // Use speedBias to increase one motor speed while decreasing the other, causing rotation
+    int mtrSpeed_R = dc.speed + speedBias;
+    int mtrSpeed_L = dc.speed - speedBias;
+  }
+}
+
+void controlUltrasonic() {
+  USCommand uc = floorMap.getUSCommand();
+
+  // Move servo to position
+  //int xpos = map(0,-194,166,0,180);
+  if (uc.function != CMD_SERVO_HOLD) {
+    int xpos = map(uc.pos,0,360,1,179);
+    myservo.write(xpos); //98 //8
+    delay(1000);
+    servoPos = uc.pos;
+  }
+
+  //  Ping when servo is in position
+  //Serial.println(servoPos);
+  if (uc.function == CMD_SERVO_GOTO_PING && servoPos == uc.pos) {
+    Vector vPing;
+    //vPing.dir = heading360 + servoPos;
+    vPing.dir = servoPos;
+    vPing.dist = us.getRangeCM();
+    floorMap.ping(vPing);  
+  }
+}
+/* #endregion */
+
 void loop() {  
   /* #region TEST */
   #ifdef DEBUG_TEST
@@ -185,58 +232,15 @@ void loop() {
   /* #endregion */
 
   /* #region MAIN */
-  // Answer client requests
   if (server.requestAvailable() != "") { server.respond(floorMap.data); }
+  
+  compass.update();
+  controlMotor();
+  controlUltrasonic();  
 
-  // Get commands from floorMap
-  DriveCommand dc = floorMap.getDriveCommand();
-  USCommand uc = floorMap.getUSCommand();
-
-  // Get heading from compass
-  int heading360 = compass.getHeading();
-  int heading180;
-  if (heading360 < 180) { heading180 = heading360; }
-  else { heading180 = heading360 - 360; }
-
-  // Control Motors
-  if (dc.speed) {
-    // Control loop for error between compass heading and command heading
-    // ****** Need to manipulate SP because of 360deg rollover and optimal path CW/CCW
-    int pv_driveDir = heading360;
-    int sp_driveDir = dc.v.dir;
-    //int diffCW = 
-    //int diffCCW =  
-    
-    int speedBias = pid_drive.update(0x01, heading360, dc.v.dir);
-    
-    // If error is large (unstable), default to turning on the spot. Otherwise take speed cmd.
-    int forwardSpeed = 0;
-    if (pid_drive.getStability()) { forwardSpeed = dc.speed; }
-    // Use speedBias to increase one motor speed while decreasing the other, causing rotation
-    int mtrSpeed_R = dc.speed + speedBias;
-    int mtrSpeed_L = dc.speed - speedBias;
-  }
-
-  // Control Ultrasonic
-  //int xpos = map(0,-194,166,0,180);
-  if (uc.pos > -1) {
-    int xpos = map(uc.pos,0,360,1,179);
-    myservo.write(xpos); //98 //8
-    delay(1000);
-    stepperPos = uc.pos;
-  }
-    //Serial.println(stepperPos);
-  Vector vPing;
-  if (stepperPos == uc.pos) {
-    //vPing.dir = heading360 + stepperPos;
-    vPing.dir = stepperPos;
-    vPing.dist = us.getRangeCM();    
-  } else { vPing.dist = 0; }  
-
-  // Send events to floorMap
   if (encoderPulse.update(digitalRead(PIN_ENCODER), 50, 50)) { floorMap.step(); }
-  if (vPing.dist != 0) { floorMap.ping(vPing); }
   if (digitalRead(PIN_BUMPSENSOR)) { floorMap.collision(); }
+
   floorMap.update();
   /* #endregion */
 }
