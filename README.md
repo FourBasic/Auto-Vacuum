@@ -18,7 +18,7 @@ Attempting to design a battery powered vacuum that can:
    - Use the encoder & compass as the primary means of tracking its rough position on the map.
    - Use the ultrasonic range finder to deduce corrections to its position and perform more precise short term navigation around non-mapped obstacles.
 
-![image](https://github.com/user-attachments/assets/8adf70b6-359c-40b2-999a-280c45062bb5)
+![Screenshot from 2024-10-19 09-37-20](https://github.com/user-attachments/assets/5b7e4b4f-d07f-4ee4-98ec-b4b80bd6dd27)
 
 ![image](https://github.com/user-attachments/assets/8dfb0526-38e5-4259-90d3-f3a3dc445531)
 
