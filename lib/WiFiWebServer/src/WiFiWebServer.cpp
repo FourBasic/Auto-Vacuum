@@ -131,7 +131,7 @@ void WiFiWebServer::respond(uint8_t data[2500]) {
     client.print(F("ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);"));
     client.print(F("}}coordInd+=1;}}"));
     client.print(F("</script>"));
-    client.print(F("<meta http-equiv=\"refresh\" content=\"10\">"));
+    client.print(F("<meta http-equiv=\"refresh\" content=\"60\">"));
     
     // The HTTP response ends with another blank line:
     client.println();

@@ -28,7 +28,6 @@
 #define CMD_SERVO_HOLD 0
 #define CMD_SERVO_GOTO_POS 1
 #define CMD_SERVO_GOTO_PING 2
-
 /* #endregion */
 
 struct CoordinatesXY {

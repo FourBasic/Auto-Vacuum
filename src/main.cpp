@@ -132,10 +132,6 @@ void initTest() {
 void setup() {
   //initMatrix();
   Serial.begin(9600);
-  #ifdef DEBUG_TEST
-    initTest();
-    return; // Do not init anything else
-  #endif
   initIO();
   initDevice();
   initAbstract();
@@ -169,11 +165,13 @@ void controlUltrasonic() {
   USCommand uc = floorMap.getUSCommand();
 
   // Move servo to position
-  //int xpos = map(0,-194,166,0,180);
   if (uc.function != CMD_SERVO_HOLD) {
-    int xpos = map(uc.pos,0,360,1,179);
+    //int xpos = map(0,-194,166,0,180);
+    //int xpos = map(uc.pos,-180,180,1,179);
+    int xpos = map(uc.pos,-180,180,5,179);
+    //Serial.println(uc.pos);
     myservo.write(xpos); //98 //8
-    delay(1000);
+    delay(300);
     servoPos = uc.pos;
   }
 
@@ -190,48 +188,6 @@ void controlUltrasonic() {
 /* #endregion */
 
 void loop() {  
-  /* #region TEST */
-  #ifdef DEBUG_TEST
-    testClock.setup(0);
-
-    while(true) {
-      ioSim.update();
-      testClock.update(!testClock.getState(), 100, 100);
-      if (testClock.getTransitionFlag()) {
-        testClock.resetTransitionFlag();
-
-        int heading360;
-        heading360 = compass.getHeading();
-
-        int speedBias = pid_drive.update(0x01, heading360, 60);
-        int speed = abs(speedBias);
-        if (speed < 50) { speed = 0; }
-
-        if (speedBias > 0) {
-          analogWrite(PIN_MTRL_FWD, 0); analogWrite(PIN_MTRL_REV, 255);
-          analogWrite(PIN_MTRR_FWD, 255); analogWrite(PIN_MTRR_REV, 0);        
-        } else {
-          analogWrite(PIN_MTRL_FWD, 255); analogWrite(PIN_MTRL_REV, 0);
-          analogWrite(PIN_MTRR_FWD, 0); analogWrite(PIN_MTRR_REV, 255);    
-        }
-        
-        //analogWrite(PIN_MTRL_SPD, speed);
-        //analogWrite(PIN_MTRR_SPD, speed);
-
-        //Serial.println(speedBias);
-        //Serial.println(speed);
-        //Serial.println(pid_drive.getError());
-        //Serial.println("");
-      }
-      
-
-
-
-    }
-  #endif
-  /* #endregion */
-
-  /* #region MAIN */
   if (server.requestAvailable() != "") { server.respond(floorMap.data); }
   
   compass.update();
@@ -242,7 +198,6 @@ void loop() {
   if (digitalRead(PIN_BUMPSENSOR)) { floorMap.collision(); }
 
   floorMap.update();
-  /* #endregion */
 }
 
 

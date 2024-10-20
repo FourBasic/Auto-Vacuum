@@ -45,8 +45,11 @@ void Map2D::update() {
 
     // Completion conditions for sweep
     if (usAction == ACTION_US_SWEEP) {
-        if (pingBuff_size < 4) {
-            usCmd.pos = (pingBuff_size * 45)+90;
+        if (pingBuff_size == 0) {
+            usCmd.function = CMD_SERVO_GOTO_PING;
+            usCmd.pos = -90;
+        } else if (pingBuff_size < 19) {            
+            usCmd.pos = usCmd.pos + 10;
         } else {
             usCmd.function = CMD_SERVO_GOTO_POS;
             usCmd.pos = 0;
@@ -124,11 +127,7 @@ void Map2D::nextDriveCmd() {
 // Determine the next ultrasonic command
 void Map2D::nextUSCmd() {
     if (mode == MODE_BUILD) {
-        if (usAction == ACTION_INIT) {
-            newUSAction(ACTION_US_SWEEP);
-            usCmd.function = CMD_SERVO_GOTO_PING;
-            usCmd.pos = (pingBuff_size * 45)+90;
-        }
+        if (usAction == ACTION_INIT) { newUSAction(ACTION_US_SWEEP); }
     }
 }
 
@@ -173,6 +172,8 @@ void Map2D::pingBuffToGrid(uint8_t type) {
             //i = 99;
         } else {Serial.print("O/R");}
     }
+    // Mark buffer as empty
+    pingBuff_size = 0;
 }
 
 // Find and fill in small gaps in near continuous solids
