@@ -70,6 +70,7 @@ class Map2D {
       void newMode(uint8_t m);
       void newDriveAction(uint8_t a);
       void newUSAction(uint8_t a);
+      void actionSweep();
       void gridSolidify();
       void gridMarkEmpty();
       uint8_t getMapData(CoordinatesXY c, uint8_t fctn, uint8_t* ptrFirstElement);
