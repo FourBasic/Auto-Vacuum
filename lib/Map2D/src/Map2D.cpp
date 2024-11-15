@@ -31,6 +31,7 @@ Map2D::Map2D() { }
         // Check EEPROM if map exists and load into memory, otherwise build
         // Just build for initial testing
         newMode(MODE_BUILD);
+        newObjective(OBJECTIVE_CONFIRM_WALLS);
         newDriveAction(ACTION_INIT);
         newUSAction(ACTION_INIT);
         nextDriveCmd();
@@ -44,13 +45,20 @@ Map2D::Map2D() { }
         if (driveAction == ACTION_WAIT && usAction == ACTION_COMPLETE) { newDriveAction(ACTION_COMPLETE); }
         if (usAction == ACTION_WAIT && driveAction == ACTION_COMPLETE) { newUSAction(ACTION_COMPLETE); }
 
-        // Generate next command on complete
-        if (driveAction == ACTION_COMPLETE) { nextDriveCmd(); }
-        if (usAction == ACTION_COMPLETE) { nextUSCmd(); }
+        // Index objective buffer for next action 
+        if (driveAction == ACTION_COMPLETE && usAction == ACTION_COMPLETE) {
+            // Mark current as completed and load next
+            objectiveBuff[objectiveBuffIndex] = ACTION_COMPLETE;
+            objectiveBuffIndex += 1;
+            // Load next objective if current buffer is complete
+            if (objectiveBuff[objectiveBuffIndex] == ACTION_COMPLETE) { nextObjective(); }   
+            // Load next device commands based on current buffer action             
+            nextDriveCmd();
+            nextUSCmd();
+        }
 
-        // Completion conditions for sweep
+        // Call any active device action functions
         if (usAction == ACTION_US_SWEEP) { actionSweep(); }
-
     }
 
     // Counts drive steps to flag drive action completion
@@ -101,20 +109,56 @@ Map2D::Map2D() { }
 
 /***********************************************************************************************************************************************/
 
+/* #region OBJECTIVE */
+
+    // Update current mode and last mode
+    void Map2D::newMode(uint8_t m) {
+        modeLast = mode;
+        mode = m;
+    }
+
+        // Update current mode and last mode
+    void Map2D::newObjective(uint8_t o) {
+        objectiveLast = objective;
+        objective = o;
+    }
+
+    void Map2D::nextObjective(){
+        if (mode == MODE_BUILD) {
+            // First build sequence. Find all walls until entire map is enclosed (ACTION_MAP_PATH_TO_NEXT_UNKNOWN fails)
+            if (objective == OBJECTIVE_CONFIRM_WALLS) {
+                objectiveBuffIndex = 0;
+                objectiveBuff[0] = ACTION_US_SWEEP;
+                objectiveBuff[1] = ACTION_MAP_PING_TO_GRID;
+                objectiveBuff[2] = ACTION_MAP_ASSUME_EMPTY;
+                objectiveBuff[3] = ACTION_MAP_PATH_TO_NEXT_UNKNOWN;
+                objectiveBuff[4] = ACTION_DRV_GOTO_POS;                 
+            }
+        }
+    }
+
+/* #endregion */
+
+/***********************************************************************************************************************************************/
+
 /* #region DRIVE_ACTION_COMMAND */
     
+    // Update current action and last action
+    void Map2D::newDriveAction(uint8_t a) {
+        driveAction_last = driveAction;
+        driveAction = a;
+    }
+
     // Determine the next drive command
     // Control sequence of actions required to achieve macro objective
     void Map2D::nextDriveCmd() {
-        if (mode == MODE_BUILD) {
-            if (driveAction == ACTION_INIT) {
-                newDriveAction(ACTION_WAIT);
-                driveCmd.speed = 0;
-            } else if (driveAction == ACTION_COMPLETE) {            
-                driveCmd.speed = 255;
-                driveCmd.v.dir = 50;
-                driveCmd.v.dist = 50;
-            }
+        // Get current buffer command
+        uint8_t currentBufferCommand = objectiveBuff[objectiveBuffIndex];
+        // Check if next command in objective buffer is drive related (solo or tandem)
+        if ((currentBufferCommand > 39 && currentBufferCommand < 60) || (currentBufferCommand > 79 && currentBufferCommand < 100)) { 
+            newDriveAction(currentBufferCommand); 
+        } else {
+            newDriveAction(ACTION_WAIT);
         }
     }
 
@@ -124,11 +168,21 @@ Map2D::Map2D() { }
 
 /* #region ULTRASONIC_ACTION_COMMAND */
 
-    // Determine the next ultrasonic action
-    // Called to determine the next action in the sequence
+    // Update current action and last action
+    void Map2D::newUSAction(uint8_t a) {
+        usAction_last = usAction;
+        usAction = a;
+    }
+
+    // Called to load in the next action from the buffer
     void Map2D::nextUSCmd() {
-        if (mode == MODE_BUILD) {
-            if (usAction == ACTION_INIT) { newUSAction(ACTION_US_SWEEP); }
+        // Get current buffer command
+        uint8_t currentBufferCommand = objectiveBuff[objectiveBuffIndex];
+        // Check if next command in objective buffer is US related (solo or tandem)
+        if ((currentBufferCommand > 19 && currentBufferCommand < 40) || (currentBufferCommand > 79 && currentBufferCommand < 100)) { 
+            newUSAction(currentBufferCommand); 
+        } else {
+            newUSAction(ACTION_WAIT);
         }
     }
 
@@ -246,24 +300,6 @@ Map2D::Map2D() { }
         c.x = sin(dirRad) * v.dist;
         c.y = cos(dirRad) * v.dist;
         return c; 
-    }
-
-    // Update current mode and last mode
-    void Map2D::newMode(uint8_t m) {
-        modeLast = mode;
-        mode = m;
-    }
-
-    // Update current action and last action
-    void Map2D::newDriveAction(uint8_t a) {
-        driveAction_last = driveAction;
-        driveAction = a;
-    }
-
-    // Update current action and last action
-    void Map2D::newUSAction(uint8_t a) {
-        usAction_last = usAction;
-        usAction = a;
     }
 
     // Inserts grid square type in data array at given XY 

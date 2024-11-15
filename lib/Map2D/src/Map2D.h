@@ -11,17 +11,34 @@
 #define GRID_MYPOS 2
 /* #endregion */
 
-/* #region DEFINE_ACTION_CONTEXT */
+/* #region DEFINE_MODE_CONTEXT */
 #define MODE_BUILD 1
 #define MODE_CLEAN 2
+/* #endregion */
+
+/* #region DEFINE_OBJECTIVE_CONTEXT */
+#define OBJECTIVE_CONFIRM_WALLS 1
+
+/* #endregion */
+
+/* #region DEFINE_ACTION_CONTEXT */
+// Shared actions (0-19)
+#define ACTION_COMPLETE 0
 #define ACTION_INIT 1
-#define ACTION_COLLISION 2
-#define ACTION_COMPLETE 3
-#define ACTION_WALLRIDE 4
-#define ACTION_OPENAREA 5
-#define ACTION_US_SWEEP 6
-#define ACTION_CRUISE 7
-#define ACTION_WAIT 8
+#define ACTION_WAIT 2
+#define ACTION_COLLISION 3
+
+// Ultrasonic actions (20-39)
+#define ACTION_US_SWEEP 20
+// Drive actions (40-59)
+#define ACTION_DRV_GOTO_POS 40
+// Tandem actions (60-79)
+#define ACTION_TANDEM_WALLRIDE 60
+// Map actions (80-99)
+#define ACTION_MAP_PING_TO_GRID 80
+#define ACTION_MAP_ASSUME_EMPTY 81
+#define ACTION_MAP_PATH_TO_NEXT_UNKNOWN 82
+
 /* #endregion */
 
 /* #region DEFINE_COMMAND */
@@ -62,14 +79,19 @@ class Map2D {
       uint8_t data[2500]; //50*50 Grid - 30x30cm squares
    private:
       void setPosGrid(CoordinatesXY c);   
-      void nextDriveCmd();
       void nextUSCmd();
+      
+      
       void setMapData(CoordinatesXY c, uint8_t type);
       void pingBuffToGrid(uint8_t type);
       void markEnclosedArea();
       void newMode(uint8_t m);
+      void newObjective(uint8_t m);
+      void nextObjective();
       void newDriveAction(uint8_t a);
+      void nextDriveCmd();
       void newUSAction(uint8_t a);
+      void nextUSCmd();
       void actionSweep();
       void gridSolidify();
       void gridMarkEmpty();
@@ -80,7 +102,9 @@ class Map2D {
       const int gridSquareSize = 30;//30x30cm Grid Square
       CoordinatesXY pos, posGrid;
       Vector movement;
-      uint8_t mode, modeLast, driveAction, driveAction_last, usAction, usAction_last;
+      uint8_t mode, modeLast, objective, objectiveLast, driveAction, driveAction_last, usAction, usAction_last;
+      uint8_t objectiveBuff[10];
+      int objectiveBuffIndex;
       DriveCommand driveCmd;
       USCommand usCmd;
       Vector pingBuff[36];
