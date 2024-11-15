@@ -32,8 +32,8 @@ Map2D::Map2D() { }
         // Just build for initial testing
         newMode(MODE_BUILD);
         newObjective(OBJECTIVE_CONFIRM_WALLS);
-        newDriveAction(ACTION_INIT);
-        newUSAction(ACTION_INIT);
+        newDriveAction(ACTION_COMPLETE);
+        newUSAction(ACTION_COMPLETE);
         nextDriveCmd();
         nextUSCmd();
     }
