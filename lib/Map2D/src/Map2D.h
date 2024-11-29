@@ -17,8 +17,8 @@
 /* #endregion */
 
 /* #region DEFINE_OBJECTIVE_CONTEXT */
+#define OBJECTIVE_INIT 0
 #define OBJECTIVE_CONFIRM_WALLS 1
-
 /* #endregion */
 
 /* #region DEFINE_ACTION_CONTEXT */
@@ -27,7 +27,6 @@
 #define ACTION_INIT 1
 #define ACTION_WAIT 2
 #define ACTION_COLLISION 3
-
 // Ultrasonic actions (20-39)
 #define ACTION_US_SWEEP 20
 // Drive actions (40-59)
@@ -77,24 +76,33 @@ class Map2D {
       USCommand getUSCommand();
       
       uint8_t data[2500]; //50*50 Grid - 30x30cm squares
+
    private:
-      void setPosGrid(CoordinatesXY c);   
-      void nextUSCmd();
-      
-      
-      void setMapData(CoordinatesXY c, uint8_t type);
-      void pingBuffToGrid(uint8_t type);
-      void markEnclosedArea();
+      // Objective
       void newMode(uint8_t m);
       void newObjective(uint8_t m);
       void nextObjective();
-      void newDriveAction(uint8_t a);
-      void nextDriveCmd();
-      void newUSAction(uint8_t a);
-      void nextUSCmd();
-      void actionSweep();
+      void checkForComplete();
+      // Map
+      void newMapAction(uint8_t a);
+      void nextMapCmd();      
+      void setPosGrid(CoordinatesXY c);
+      void setMapData(CoordinatesXY c, uint8_t type);
+      void actMapPingToGrid(uint8_t type);
+      void actMapAssumeEmtpy();
+      void actMapPathToNearest(uint8_t type);
+
       void gridSolidify();
       void gridMarkEmpty();
+      void markEnclosedArea();
+      // Ultrasonic 
+      void newUSAction(uint8_t a);
+      void nextUSCmd();
+      void actUSSweep();
+      // Drive
+      void newDriveAction(uint8_t a);
+      void nextDriveCmd();           
+
       uint8_t getMapData(CoordinatesXY c, uint8_t fctn, uint8_t* ptrFirstElement);
       CoordinatesXY splitVector(Vector v);
       const int stepSize = 10;//10
@@ -102,7 +110,7 @@ class Map2D {
       const int gridSquareSize = 30;//30x30cm Grid Square
       CoordinatesXY pos, posGrid;
       Vector movement;
-      uint8_t mode, modeLast, objective, objectiveLast, driveAction, driveAction_last, usAction, usAction_last;
+      uint8_t mode, modeLast, objective, objectiveLast, mapAction, mapAction_last, driveAction, driveAction_last, usAction, usAction_last;
       uint8_t objectiveBuff[10];
       int objectiveBuffIndex;
       DriveCommand driveCmd;

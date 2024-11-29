@@ -166,10 +166,7 @@ void controlUltrasonic() {
 
   // Move servo to position
   if (uc.function != CMD_SERVO_HOLD) {
-    //int xpos = map(0,-194,166,0,180);
-    //int xpos = map(uc.pos,-180,180,1,179);
     int xpos = map(uc.pos,-180,180,5,179);
-    //Serial.println(uc.pos);
     myservo.write(xpos); //98 //8
     delay(300);
     servoPos = uc.pos;
@@ -200,7 +197,7 @@ void loop() {
   floorMap.update();
 }
 
-
+/* #region NOTES */
 /*
 Single very low resolution encoder attached to only one motor.
 Can do just one motor because the turns should result in little to no displacement
@@ -228,3 +225,4 @@ multiple us?
 
 
 */
+/* #endregion */
