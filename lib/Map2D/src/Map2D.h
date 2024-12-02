@@ -9,6 +9,7 @@
 #define GRID_DIVIDER 3
 #define GRID_EMPTY 4
 #define GRID_MYPOS 2
+#define GRID_INVALID 99
 /* #endregion */
 
 /* #region DEFINE_MODE_CONTEXT */
@@ -87,13 +88,13 @@ class Map2D {
       void newMapAction(uint8_t a);
       void nextMapCmd();      
       void setPosGrid(CoordinatesXY c);
+      uint8_t getMapData(CoordinatesXY c);
       void setMapData(CoordinatesXY c, uint8_t type);
       void actMapPingToGrid(uint8_t type);
       void actMapAssumeEmtpy();
       void actMapPathToNearest(uint8_t type);
 
       void gridSolidify();
-      void gridMarkEmpty();
       void markEnclosedArea();
       // Ultrasonic 
       void newUSAction(uint8_t a);
@@ -103,8 +104,8 @@ class Map2D {
       void newDriveAction(uint8_t a);
       void nextDriveCmd();           
 
-      uint8_t getMapData(CoordinatesXY c, uint8_t fctn, uint8_t* ptrFirstElement);
       CoordinatesXY splitVector(Vector v);
+
       const int stepSize = 10;//10
       const int gridSize = 50;//50
       const int gridSquareSize = 30;//30x30cm Grid Square

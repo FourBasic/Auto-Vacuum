@@ -44,7 +44,7 @@ Map2D::Map2D() { }
 
         // Call any active action functions
         // Map actions
-        switch (usAction) {
+        switch (mapAction) {
             case ACTION_MAP_PING_TO_GRID:
                 actMapPingToGrid(GRID_SOLID); 
             case ACTION_MAP_ASSUME_EMPTY:
@@ -57,6 +57,12 @@ Map2D::Map2D() { }
         switch (usAction) {
             case ACTION_US_SWEEP:
                 actUSSweep();                             
+        }
+
+        // Drive actions
+        switch (driveAction) {
+            case ACTION_DRV_GOTO_POS:
+                                            
         }
     }
 
@@ -184,11 +190,6 @@ Map2D::Map2D() { }
         }
     }
 
-    // Deduce grid area that is empty
-    void Map2D::markEnclosedArea() {
-
-    }
-
     // Convert ping buff relative v to grid absolute XY
     void Map2D::actMapPingToGrid(uint8_t type) {    
         for (int i=0; i<pingBuff_size; i++) {
@@ -226,9 +227,33 @@ Map2D::Map2D() { }
         newMapAction(ACTION_COMPLETE);
     }
 
-    // 
+    // Deduce grid empty spaces from current position
+    // Simplified by checking square around origin instead of circle
+    // Search pattern is not ideal. Upgrade to polar search pattern eventually.
+    // ^^^^^^^^^^^^^
+    // <<<<<<o>>>>>>
+    // vvvvvvvvvvvvv
     void Map2D::actMapAssumeEmtpy() {
+        // Get origin
+        CoordinatesXY origin = posGrid;
 
+        // Hardcode max range as 3 grid squares
+        int range = 3;
+    
+        // Search left and up. Mark any unknowns as empty. Stop when you hit a wall.
+        // Pretty bad, make better.
+        CoordinatesXY checkPos;
+        for (int shiftX=1; shiftX<range; shiftX++) {            
+            checkPos.x = origin.x - shiftX;
+
+            for (int shiftY=0; shiftY<range; shiftY++) { 
+                checkPos.y = origin.y + shiftY;
+
+                uint8_t grid = getMapData(checkPos);       
+                if (grid == GRID_UNKNOWN) { setMapData(checkPos, GRID_EMPTY); }
+                else if (grid != GRID_EMPTY) { break; }
+            }
+        }
     }
 
     // 
@@ -247,13 +272,13 @@ Map2D::Map2D() { }
         // ie getSurrounding(radius) Def use pointers so not array size dependant
         CoordinatesXY checkCoord;
         uint8_t perimData[3];
-        getMapData(checkCoord, XFER_PERIM_ONE, &perimData[0]);
+        // getMapData(checkCoord, XFER_PERIM_ONE, &perimData[0]);
     }
 
-    // Mark deduced grid empty spaces
-    void Map2D::gridMarkEmpty() {
+    // Deduce grid area that is empty
+    void Map2D::markEnclosedArea() {
 
-}
+    }
 
 /* #endregion */
 
@@ -353,23 +378,18 @@ Map2D::Map2D() { }
 
     // Inserts grid square type in data array at given XY 
     void Map2D::setMapData(CoordinatesXY c, uint8_t type) {
+
         int i = (c.x * gridSize) + c.y;
-        data[i] = type;
+        // Ignore invalid requests
+        if (i > -1 && i < sizeof(data)) { data[i] = type; }
     }
 
     // Returns grid square type from data array at given XY
-    uint8_t Map2D::getMapData(CoordinatesXY c, uint8_t fctn, uint8_t* ptrFirstElement) {
-        
-        // remove return from function even for single
-        uint8_t actualData[5]; //delete
-        if (fctn == XFER_SINGLE) { 
-            int i = (c.x * gridSize) + c.y;
-            return data[i];
-        } else if (fctn == XFER_PERIM_ONE) {
-            // Is this even legal or remotely correct?
-            ptrFirstElement ++; // Index memory address (Presumably by 1 byte)
-            *ptrFirstElement = actualData[2]; // Set that second byte address to a value?
-        }    
+    uint8_t Map2D::getMapData(CoordinatesXY c) {
+
+        int i = (c.x * gridSize) + c.y;
+        if (i > -1 && i < sizeof(data)) { return data[i]; }
+        else { return GRID_INVALID; }         
     }
 
 /* #endregion */
