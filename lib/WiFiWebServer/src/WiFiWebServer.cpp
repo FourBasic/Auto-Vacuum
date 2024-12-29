@@ -1,6 +1,9 @@
 #include "WiFiWebServer.h"
 #include <Arduino.h>
 #include "WiFiS3.h"
+#include "index.h"
+#include "script.h"
+#include "styles.h"
 
 WiFiWebServer::WiFiWebServer(int port) {
     WiFiServer server(port);
@@ -66,7 +69,8 @@ void WiFiWebServer::setup(const char *ssid, const char *pass, uint8_t ipo1, uint
     printWiFiStatus();
 }
 
-String WiFiWebServer::requestAvailable() {
+// Check for request
+bool WiFiWebServer::requestAvailable() {
     // compare the previous status to the current status
     if (status != WiFi.status()) {
         // it has changed update the variable
@@ -79,42 +83,65 @@ String WiFiWebServer::requestAvailable() {
             Serial.println("Device disconnected from AP");
         }
     }
+    return server.available();
+}
 
-    client = server.available();   // listen for incoming clients
-    if (client) {                            // if you get a client,
-        Serial.println("new client");           // print a message out the serial port
-        String currentLine = "";                       // make a String to hold incoming data from the client
-        while (client.connected()) {            // loop while the client's connected
-            delayMicroseconds(10);                // This is required for the Arduino Nano RP2040 Connect - otherwise it will loop so fast that SPI will never be served.
-            if (client.available()) {             // if there's bytes to read from the client,
-                char c = client.read();             // read a byte, then
-                Serial.write(c);                    // print it out to the serial monitor
-                if (c == '\n') {                    // if the byte is a newline character
-                    // if the current line is blank, you got two newline characters in a row.
-                    // that's the end of the client HTTP request, so send a response:
-                    if (currentLine.length() == 0) {
-                        return request;
-                        break;
-                    } else {      // if you got a newline, then clear currentLine:
-                    request = currentLine;
-                    currentLine = "";
-                    }
-                } else if (c != '\r') {    // if you got anything else but a carriage return character,
-                    currentLine += c;      // add it to the end of the currentLine
-                }        
+// Respond to request
+void WiFiWebServer::respond(String data) {    
+    client = server.available();
+    Serial.println("new client");
+    String response = "";
+    String contentType = "text/";
+    while (client.connected()) {
+        if (client.available()) {            
+            String input = client.readStringUntil('\n');
+            if (Serial) Serial.println(input);
+            // if you only get a return character, then you've reached the end
+            // of the request. You can send a response:
+            if (input == "\r") {
+                Serial.println("request finished");
+                // response header
+                client.println("HTTP/1.1 200 OK");
+                client.println("Content-Type: " + contentType);
+                client.println("Connection: close");
+                client.println();
+                // response data
+                client.println(response);
+                client.println();
+                break;
+            }
+            // trim any whitespace from the response:
+            input.trim();
+            // check what the GET request is (always ends with /HTTP/1.1):
+            // the index page request:
+            if (input.endsWith("/ HTTP/1.1") || input.endsWith("/index.html HTTP/1.1")) {
+            response = String(INDEXHTML);
+            contentType += "html";
+            }
+            // the stylesheet request:
+            if (input.endsWith("/styles.css HTTP/1.1")) {
+            response = String(STYLESCSS);
+            contentType += "css";
+            }
+            // the javascript response:
+            if (input.endsWith("/script.js HTTP/1.1")) {
+            response = String(SCRIPTJS);
+            contentType += "js";
+            }
+            // a custom response that sends the readings as JSON:
+            if (input.endsWith("/readings HTTP/1.1")) {
+            response = data;
+            contentType += "json";
             }
         }
     }
-    return "";
-}
+    // if the client is diconnected, close the connection:
+    client.stop();
+    Serial.println("client disconnected");
+    
+    
 
-void WiFiWebServer::respond(uint8_t data[2500]) {
-    // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-    // and a content-type so the client knows what's coming, then a blank line:
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-type:text/html");
-    client.println();
-
+    /*
     // the content of the HTTP response follows the header:
     client.print(F("<!DOCTYPE html>"));
     client.print(F("<canvas id='myCanvas' width='1500' height='1500'></canvas>"));
@@ -127,16 +154,13 @@ void WiFiWebServer::respond(uint8_t data[2500]) {
     client.print(F("ctx.strokeStyle='rgb(0,0,0)';for(let x=1; x<=gridSize;x+=1){for(let y=1;y<=gridSize;y+=1){ctx.strokeRect(x*eSquare,y*eSquare,eSquare,eSquare);"));
     client.print(F("if(coordInd<gridSize^2){if(coordStrY.charAt(coordInd)=='1')"));            
     client.print(F("{ctx.fillStyle='rgb(255,0,0)';ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);}"));
-    client.print(F("else if(coordStrY.charAt(coordInd)=='2'){ctx.fillStyle='rgb(0,255,0)';"));
+    client.print(F("else if(coordStrY.charAt(coordInd)=='2'){ctx.fillStyle='rgb(0, 255, 0)';"));
     client.print(F("ctx.fillRect(x*eSquare,y*eSquare,fSquare,fSquare);"));
     client.print(F("}}coordInd+=1;}}"));
     client.print(F("</script>"));
     client.print(F("<meta http-equiv=\"refresh\" content=\"60\">"));
-    
-    // The HTTP response ends with another blank line:
-    client.println();
-    // break out of the while loop:
-            // close the connection:
-    client.stop();
-    Serial.println("client disconnected");
+    */
+
+        
+        
 }

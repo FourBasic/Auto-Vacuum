@@ -6,7 +6,6 @@
 IOSimulate ioSim;
 Debounce testClock;
 #endif
-#include "psw.h"
 /* #endregion */
 
 /* #region INCLUDE */
@@ -21,6 +20,8 @@ Debounce testClock;
 #include "Map2D.h"
 #include "Debounce.h"
 #include "AwfulPID.h"
+#include "psw.h"
+#include "ArduinoOTA.h"
 /* #endregion */
 
 /* #region DEFINE_IO_PINS */
@@ -56,6 +57,10 @@ Map2D floorMap;
 AwfulPID pid_drive;
 // Scratch *********########
 int servoPos = 0;
+unsigned long scanT_millis, scanT_millisLast;
+unsigned int scanT_last, scanT_high;
+unsigned int scanT_low = 32767;
+float scanT_ave;
 
 /* #endregion */
 
@@ -182,10 +187,41 @@ void controlUltrasonic() {
     floorMap.ping(vPing);  
   }
 }
+
+String dataToJSON() {
+  String text = "{\"watch\":";
+  text += String(scanT_ave, 0);
+  text += ",\"watchH\":";
+  text += String(scanT_high);
+  text += ",\"watchL\":";
+  text += String(scanT_low);
+  text += "}";
+  return text;
+}
+
+void watchdog() {
+  scanT_millis = millis();  
+  if (scanT_millisLast != 0 && scanT_millis > scanT_millisLast) {
+    scanT_last = (scanT_millis - scanT_millisLast) ;/// 1000;
+    if (scanT_last > scanT_high) { 
+      scanT_high = scanT_last; 
+    } else if (scanT_last < scanT_low) { 
+      scanT_low = scanT_last; 
+    }
+    // Moving average - pretend 3000 in the buffer
+    if (scanT_ave > 0) { 
+      scanT_ave = ((scanT_ave * 3000) + (float)scanT_last) / 3001;
+    } else {
+      scanT_ave = (float)scanT_last;
+    }
+  }
+  scanT_millisLast = scanT_millis;
+
+}
 /* #endregion */
 
-void loop() {  
-  if (server.requestAvailable() != "") { server.respond(floorMap.data); }
+void loop() {
+  if (server.requestAvailable()) { server.respond(dataToJSON()); }
   
   compass.update();
   controlMotor();
@@ -195,6 +231,7 @@ void loop() {
   if (digitalRead(PIN_BUMPSENSOR)) { floorMap.collision(); }
 
   floorMap.update();
+  watchdog();
 }
 
 /* #region NOTES */

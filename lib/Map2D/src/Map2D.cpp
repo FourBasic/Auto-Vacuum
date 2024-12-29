@@ -62,7 +62,7 @@ Map2D::Map2D() { }
         // Drive actions
         switch (driveAction) {
             case ACTION_DRV_GOTO_POS:
-                                            
+                actUSSweep();                         
         }
     }
 
