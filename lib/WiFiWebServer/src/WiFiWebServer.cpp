@@ -69,6 +69,10 @@ void WiFiWebServer::setup(const char *ssid, const char *pass, uint8_t ipo1, uint
     printWiFiStatus();
 }
 
+bool WiFiWebServer::getDataDelivered() {
+    return dataDelivered;
+}
+
 // Check for request
 bool WiFiWebServer::requestAvailable() {
     // compare the previous status to the current status
@@ -87,7 +91,8 @@ bool WiFiWebServer::requestAvailable() {
 }
 
 // Respond to request
-void WiFiWebServer::respond(String data) {    
+void WiFiWebServer::respond(String data) {   
+    dataDelivered = 0; 
     client = server.available();
     Serial.println("new client");
     String response = "";
@@ -132,6 +137,7 @@ void WiFiWebServer::respond(String data) {
             if (input.endsWith("/readings HTTP/1.1")) {
             response = data;
             contentType += "json";
+            dataDelivered = 1; // Set a flag indicating that specifically JSON data has been sent so that Map2D buffer can be reset
             }
         }
     }

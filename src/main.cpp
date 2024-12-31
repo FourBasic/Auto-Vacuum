@@ -109,6 +109,7 @@ void initDevice() {
   compass.setup();
   encoderPulse.setup(digitalRead(PIN_ENCODER));
   server.setup(ssid, pass, 192, 168, 51, 236);
+  while (!server.requestAvailable()) {}
   myservo.attach(PIN_SERVO, 760,2260); //760,2260
 }
 
@@ -189,12 +190,87 @@ void controlUltrasonic() {
 }
 
 String dataToJSON() {
+  // Watchdog
   String text = "{\"watch\":";
   text += String(scanT_ave, 0);
   text += ",\"watchH\":";
   text += String(scanT_high);
   text += ",\"watchL\":";
   text += String(scanT_low);
+  // Objectives and Actions  
+  text += ",\"objective\":";
+  switch (floorMap.getObjective()) {
+    case OBJECTIVE_INIT:
+      text += "\"INIT\""; 
+      break;
+    case OBJECTIVE_CONFIRM_WALLS:
+      text += "\"CONFIRM WALLS\""; 
+      break;
+    default:
+      text += "\"?\"";
+  }
+  text += ",\"mapAction\":";
+  switch (floorMap.getMapAction()) {
+    case ACTION_WAIT:
+      text += "\"WAIT\""; 
+      break;
+    case ACTION_COMPLETE:
+      text += "\"COMPLETE\""; 
+      break;
+    case ACTION_MAP_ASSUME_EMPTY:
+      text += "\"ASSUME EMPTY\""; 
+      break;
+    case ACTION_MAP_PATH_TO_NEXT_UNKNOWN:
+      text += "\"PATH TO NEXT UNKNOWN\""; 
+      break;
+    case ACTION_MAP_PING_TO_GRID:
+      text += "\"PING TO GRID\""; 
+      break;
+    default:
+      text += "\"?\"";
+  }
+  text += ",\"usAction\":";
+  switch (floorMap.getUSAction()) {
+    case ACTION_WAIT:
+      text += "\"WAIT\""; 
+      break;
+    case ACTION_COMPLETE:
+      text += "\"COMPLETE\""; 
+      break;
+    case ACTION_US_SWEEP:
+      text += "\"SWEEP\""; 
+      break;    
+    default:
+      text += "\"?\"";
+  }
+  text += ",\"driveAction\":";
+  switch (floorMap.getDriveAction()) {
+    case ACTION_WAIT:
+      text += "\"WAIT\""; 
+      break;
+    case ACTION_COMPLETE:
+      text += "\"COMPLETE\""; 
+      break;
+    case ACTION_DRV_GOTO_POS:
+      text += "\"GOTO POS\""; 
+      break;
+    default:
+      text += "\"?\"";
+  } 
+  
+  // Convert every active point in the gridChangeMon to JSON
+  int buffEnd = floorMap.getGridChangeBuffSize();
+  for (int i=0; i<buffEnd; i++) {  
+    text += ",\"gElem";
+    text += String(i);
+    text += "\":"; 
+    GridDataPoint gp = floorMap.getGridChangeBuff(i);
+    text += String(gp.elem);
+    text += ",\"gType";
+    text += String(i);
+    text += "\":"; 
+    text += String(gp.type);
+  }
   text += "}";
   return text;
 }
@@ -221,7 +297,10 @@ void watchdog() {
 /* #endregion */
 
 void loop() {
-  if (server.requestAvailable()) { server.respond(dataToJSON()); }
+  if (server.requestAvailable()) { 
+    server.respond(dataToJSON());
+    if (server.getDataDelivered()) { floorMap.setGridChangeBuffSize(0); } // Reset the buffer index to indicate the buffer has been read
+  }
   
   compass.update();
   controlMotor();

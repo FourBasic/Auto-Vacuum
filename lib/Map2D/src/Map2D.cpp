@@ -36,6 +36,7 @@ Map2D::Map2D() { }
         newUSAction(ACTION_COMPLETE);
         nextDriveCmd();
         nextUSCmd();
+        //testGridMon();
     }
 
     // Call current action functions
@@ -47,6 +48,7 @@ Map2D::Map2D() { }
         switch (mapAction) {
             case ACTION_MAP_PING_TO_GRID:
                 actMapPingToGrid(GRID_SOLID); 
+                Serial.println("To Grid");
             case ACTION_MAP_ASSUME_EMPTY:
                 actMapAssumeEmtpy();
             case ACTION_MAP_PATH_TO_NEXT_UNKNOWN:
@@ -110,6 +112,59 @@ Map2D::Map2D() { }
         return usCmd;
     }
 
+    // Get current grid change buffer index (buffer size)
+    int Map2D::getGridChangeBuffSize() {
+        return gridChangeBuffSize;
+    }
+
+    // 
+    GridDataPoint Map2D::getGridChangeBuff(int elem) {
+        return gridChangeBuff[elem];
+    }
+
+    // 
+    void Map2D::setGridChangeBuffSize(int size) {
+        gridChangeBuffSize = size;
+    }
+
+    // Return current objective
+    uint8_t Map2D::getObjective() {
+        return objective;
+    }
+
+    // Return current MapAction
+    uint8_t Map2D::getMapAction() {
+        return mapAction;
+    }
+
+    // Return current USAction
+    uint8_t Map2D::getUSAction() {
+        return usAction;
+    }
+
+    // Return current driveAction
+    uint8_t Map2D::getDriveAction() {
+        return driveAction;
+    }
+
+    // 
+    void Map2D::testGridMon() {
+        gridChangeBuff[0].elem = 2;
+        gridChangeBuff[0].type = 1;
+
+        gridChangeBuff[1].elem = 53;
+        gridChangeBuff[1].type = 2;
+
+        gridChangeBuff[2].elem = 104;
+        gridChangeBuff[2].type = 3;
+
+        gridChangeBuff[3].elem = 155;
+        gridChangeBuff[3].type = 3;
+
+        gridChangeBuffSize = 4;
+    }
+
+
 /* #endregion */
 
 /***********************************************************************************************************************************************/
@@ -131,7 +186,6 @@ Map2D::Map2D() { }
     // Look at current objective to decide next objective
     // Function called only when current objective is complete
     void Map2D::nextObjective(){
-
         switch (objective) {
             case OBJECTIVE_CONFIRM_WALLS:
                 // First build sequence. Find all walls until entire map is enclosed (ACTION_MAP_PATH_TO_NEXT_UNKNOWN fails)
@@ -149,9 +203,9 @@ Map2D::Map2D() { }
     // Loads new actions when all current actions are completed
     void Map2D::checkForComplete() {
         // Set complete when wait condition is satisfied
-        if (driveAction == ACTION_WAIT && usAction == ACTION_COMPLETE && mapAction == ACTION_COMPLETE) { newDriveAction(ACTION_COMPLETE); }
-        if (usAction == ACTION_WAIT && driveAction == ACTION_COMPLETE && mapAction == ACTION_COMPLETE) { newUSAction(ACTION_COMPLETE); }
-        if (mapAction == ACTION_WAIT && driveAction == ACTION_COMPLETE && usAction == ACTION_COMPLETE) { newMapAction(ACTION_COMPLETE); }
+        if (driveAction == ACTION_WAIT && (usAction == ACTION_COMPLETE || usAction == ACTION_WAIT) && (mapAction == ACTION_COMPLETE) || mapAction == ACTION_WAIT) { newDriveAction(ACTION_COMPLETE); }
+        if (usAction == ACTION_WAIT && (driveAction == ACTION_COMPLETE || driveAction == ACTION_WAIT) && (mapAction == ACTION_COMPLETE || mapAction == ACTION_WAIT)) { newUSAction(ACTION_COMPLETE); }
+        if (mapAction == ACTION_WAIT && (driveAction == ACTION_COMPLETE || driveAction == ACTION_WAIT) && (usAction == ACTION_COMPLETE || usAction == ACTION_WAIT)) { newMapAction(ACTION_COMPLETE); }
 
         // Index objective buffer for next action 
         if (driveAction == ACTION_COMPLETE && usAction == ACTION_COMPLETE && mapAction == ACTION_COMPLETE) {
@@ -160,7 +214,8 @@ Map2D::Map2D() { }
             objectiveBuffIndex += 1;
             // Load next objective if current buffer is complete
             if (objectiveBuff[objectiveBuffIndex] == ACTION_COMPLETE) { nextObjective(); }   
-            // Load next device commands based on current buffer action             
+            // Load next device commands based on current buffer action 
+            nextMapCmd();            
             nextDriveCmd();
             nextUSCmd();
         }
@@ -234,6 +289,7 @@ Map2D::Map2D() { }
     // <<<<<<o>>>>>>
     // vvvvvvvvvvvvv
     void Map2D::actMapAssumeEmtpy() {
+        /*
         // Get origin
         CoordinatesXY origin = posGrid;
 
@@ -254,6 +310,7 @@ Map2D::Map2D() { }
                 else if (grid != GRID_EMPTY) { break; }
             }
         }
+        */
     }
 
     // 
@@ -381,7 +438,10 @@ Map2D::Map2D() { }
 
         int i = (c.x * gridSize) + c.y;
         // Ignore invalid requests
-        if (i > -1 && i < sizeof(data)) { data[i] = type; }
+        if (i > -1 && i < sizeof(data)) { 
+            data[i] = type;
+            newGridChange(i, type);          
+        }
     }
 
     // Returns grid square type from data array at given XY
@@ -390,6 +450,16 @@ Map2D::Map2D() { }
         int i = (c.x * gridSize) + c.y;
         if (i > -1 && i < sizeof(data)) { return data[i]; }
         else { return GRID_INVALID; }         
+    }
+
+    // Hold on to any grid changes in a buffer until the data is read externally.
+    // Intended to be externally read by the main routine while collecting the data to post to wifiWebServer.
+    // ** Only stores 100 points. If data is not read in time the oldest values begin being replaced by the new.
+    void Map2D::newGridChange(int elem, int type) {
+        gridChangeBuff[gridChangeBuffSize].elem = elem;
+        gridChangeBuff[gridChangeBuffSize].type = type;
+        if (gridChangeBuffSize > 98) { gridChangeBuffSize = 1;
+        } else { gridChangeBuffSize++; }   
     }
 
 /* #endregion */

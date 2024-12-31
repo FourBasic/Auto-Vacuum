@@ -14,10 +14,5 @@
     <span class=\"name\">Watchdog: </span><span class=\"value\" id=\"watch\"></span><span class=\"units\">usec<br></span> \
     <span class=\"name\">Watchdog High: </span><span class=\"value\" id=\"watchH\"></span><span class=\"units\">usec</span><br> \
     <span class=\"name\">Watchdog Low: </span><span class=\"value\" id=\"watchL\"></span><span class=\"units\">usec</span><br> \
-    <span class=\"name\">Objective: </span><span class=\"value\" id=\"objective\"></span><br> \
-    <span class=\"name\">Map Action: </span><span class=\"value\" id=\"mapAction\"></span><br> \
-    <span class=\"name\">US Action: </span><span class=\"value\" id=\"usAction\"></span><br> \
-    <span class=\"name\">Drive Action: </span><span class=\"value\" id=\"driveAction\"></span><br> \
 </body> \
-<canvas id=\'myCanvas\' width=\"1500\" height=\"1500\"></canvas> \ 
 </html>"
