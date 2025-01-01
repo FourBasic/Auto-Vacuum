@@ -9,7 +9,7 @@
       ctx.strokeRect(x*eSquare,y*eSquare,eSquare,eSquare); \       
     } \ 
   } \ 
-  setInterval(fetchJSON, 3000);   \ 
+  setInterval(fetchJSON, 7000);   \ 
 }  \ 
 function fetchJSON() {  \ 
   fetch(\'/readings\')   \ 

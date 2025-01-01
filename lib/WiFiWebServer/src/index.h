@@ -18,6 +18,7 @@
     <span class=\"name\">Map Action: </span><span class=\"value\" id=\"mapAction\"></span><br> \
     <span class=\"name\">US Action: </span><span class=\"value\" id=\"usAction\"></span><br> \
     <span class=\"name\">Drive Action: </span><span class=\"value\" id=\"driveAction\"></span><br> \
+    <span class=\"name\">Heading: </span><span class=\"value\" id=\"heading\"></span><span class=\"units\">deg</span><br> \
 </body> \
 <canvas id=\'myCanvas\' width=\"1500\" height=\"1500\"></canvas> \ 
 </html>"

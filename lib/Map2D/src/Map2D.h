@@ -90,7 +90,8 @@ class Map2D {
       uint8_t getMapAction();
       uint8_t getUSAction();
       uint8_t getDriveAction();
-      
+      void setUSInPos();
+         
       uint8_t data[2500]; //50*50 Grid - 30x30cm squares
 
    private:
@@ -114,7 +115,7 @@ class Map2D {
       // Ultrasonic 
       void newUSAction(uint8_t a);      
       void nextUSCmd();
-      void actUSSweep();
+      void actUSSweep();      
       // Drive
       void newDriveAction(uint8_t a);
       void nextDriveCmd();           
@@ -139,5 +140,6 @@ class Map2D {
       const uint8_t pingBuff_maxSize = 36;//36
       uint8_t pingBuff_size;
       const float degToRad = 0.017453293; // Pi/180;
+      bool usInPos, driveInPos;
 };
 #endif

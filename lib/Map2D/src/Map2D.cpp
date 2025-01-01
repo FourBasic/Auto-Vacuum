@@ -164,7 +164,11 @@ Map2D::Map2D() { }
         gridChangeBuffSize = 4;
     }
 
-
+    // Servo externally set when in position
+    // Map2D will reset it when relevant function has read inPos status
+    void Map2D::setUSInPos() {
+        usInPos = 1;
+    }
 /* #endregion */
 
 /***********************************************************************************************************************************************/
@@ -394,9 +398,13 @@ Map2D::Map2D() { }
             // Set starting sweep position
             usCmd.function = CMD_SERVO_GOTO_PING;
             usCmd.pos = -90;
+            usInPos = 0;
         } else if (pingBuff_size < 19) {
-            // Increment servo position through entire sweep          
-            usCmd.pos = usCmd.pos + 10;
+            if (usInPos) {
+                // Increment servo position through entire sweep          
+                usCmd.pos = usCmd.pos + 10;
+                usInPos = 0;
+            }
         } else {
             usCmd.function = CMD_SERVO_GOTO_POS;
             usCmd.pos = 0;            
@@ -435,7 +443,6 @@ Map2D::Map2D() { }
 
     // Inserts grid square type in data array at given XY 
     void Map2D::setMapData(CoordinatesXY c, uint8_t type) {
-
         int i = (c.x * gridSize) + c.y;
         // Ignore invalid requests
         if (i > -1 && i < sizeof(data)) { 

@@ -56,7 +56,8 @@ Debounce encoderPulse;
 Map2D floorMap;
 AwfulPID pid_drive;
 // Scratch *********########
-int servoPos = 0;
+int servoPos = 9999;
+TimerOnDelay TON_servoMove;
 unsigned long scanT_millis, scanT_millisLast;
 unsigned int scanT_last, scanT_high;
 unsigned int scanT_low = 32767;
@@ -168,18 +169,26 @@ void controlMotor() {
 }
 
 void controlUltrasonic() {
+  // get the current command from floormap
   USCommand uc = floorMap.getUSCommand();
-
-  // Move servo to position
-  if (uc.function != CMD_SERVO_HOLD) {
+  // move servo to position
+  // set movement timer -> scale move time based on distance to setpoint
+  bool timerTime = (servoPos != uc.pos) && (uc.function != CMD_SERVO_HOLD) && (!TON_servoMove.getTimerDone());
+  unsigned int timeToMove = abs(servoPos - uc.pos); // 1000msec to move 360deg -> 1000/360=2.77msec/deg -> add some arbitrary minimum
+  timeToMove = timeToMove * 3;
+  timeToMove = limit(100, timeToMove, 1000);   
+  // (oneshot) - new GOTO Position
+  if (timerTime && !TON_servoMove.getTimerTiming()) {
+    // write position to servo
     int xpos = map(uc.pos,-180,180,5,179);
-    myservo.write(xpos); //98 //8
-    delay(300);
-    servoPos = uc.pos;
+    myservo.write(xpos);
   }
-
-  //  Ping when servo is in position
-  //Serial.println(servoPos);
+  // update timer & set current position to setpoint after timer has elapsed
+  if (TON_servoMove.update(timerTime, timeToMove)) { 
+    servoPos = uc.pos;
+    floorMap.setUSInPos();
+  }
+  //  ping when servo is in position
   if (uc.function == CMD_SERVO_GOTO_PING && servoPos == uc.pos) {
     Vector vPing;
     //vPing.dir = heading360 + servoPos;
@@ -256,8 +265,10 @@ String dataToJSON() {
       break;
     default:
       text += "\"?\"";
-  } 
-  
+  }
+  // Compass heading
+  text += ",\"heading\":";
+  text += String(compass.get360());
   // Convert every active point in the gridChangeMon to JSON
   int buffEnd = floorMap.getGridChangeBuffSize();
   for (int i=0; i<buffEnd; i++) {  
