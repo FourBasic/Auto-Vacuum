@@ -71,6 +71,11 @@ struct GridDataPoint {
    int elem;
    int type;
 };
+
+struct ValueAndCertainty {
+   int value;
+   int certainty;
+};
 /* #endregion */
 
 class Map2D {
@@ -126,7 +131,7 @@ class Map2D {
 
       const int stepSize = 10;//10
       const int gridSize = 50;//50
-      const int gridSquareSize = 30;//30x30cm Grid Square
+      const int gridSquareSize = 30;//50*50 Grid of 30x30cm squares //Present self is wondering why this is not a two-dimensional XY array?
       CoordinatesXY pos, posGrid;
       Vector movement;
       uint8_t mode, modeLast, objective, objectiveLast, mapAction, mapAction_last, driveAction, driveAction_last, usAction, usAction_last;

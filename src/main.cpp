@@ -82,30 +82,6 @@ void initIO() {
   pinMode(PIN_SERVO, OUTPUT);
 }
 
-void initMatrix() {
-  /*
-  byte frame[8][12] = {
-  { 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0 },
-
-  { 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0 },
-
-  { 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0 },
-
-  { 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
-
-  { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0 },
-
-  { 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0 },
-
-  { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-
-  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-  };
-  matrix.begin();
-  matrix.renderBitmap(frame, 8, 12);  
-  */
-}
-
 void initDevice() {
   compass.setup();
   encoderPulse.setup(digitalRead(PIN_ENCODER));
@@ -137,7 +113,6 @@ void initTest() {
 }
 
 void setup() {
-  //initMatrix();
   Serial.begin(9600);
   initIO();
   initDevice();
