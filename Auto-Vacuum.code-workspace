@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "Timer",
+			"path": "../lib/Timer"
+		},
+		{
+			"name": "Encoder",
+			"path": "../lib/Encoder"
+		},
+		{
+			"name": "GeneralFunctions",
+			"path": "../lib/GeneralFunctions"
+		}
+	],
+	"settings": {}
+}
