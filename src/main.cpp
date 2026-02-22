@@ -16,7 +16,7 @@ Debounce testClock;
 #include "WiFiS3.h"
 #include "WiFiWebServer.h"
 #include "UltrasonicRange/HCSR04.h"
-#include "Compass.h"
+#include "Compass/HMC5883L.h"
 #include "Map2D.h"
 #include "Debounce.h"
 #include "AwfulPID.h"
