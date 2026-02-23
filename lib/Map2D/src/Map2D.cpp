@@ -58,7 +58,8 @@ void Map2D::update() {
 
     // Drive actions
     switch (driveAction) {
-        case ACTION_DRV_GOTO_POS:                          
+        case ACTION_DRV_GOTO_POS:
+                                        
     }
 }
 
